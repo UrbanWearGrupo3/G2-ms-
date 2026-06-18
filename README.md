@@ -1,6 +1,6 @@
-# Tienda de Ropa - Backend (Microservicio de Productos)
+# Tienda de Ropa - Backend (Microservicio de Productos y Usuarios)
 
-Este es el microservicio encargado de la gestión de productos en la tienda de ropa, desarrollado con **Spring Boot**, **Java 25**, **Maven** y **H2 Database** (base de datos en memoria).
+Este es el microservicio encargado de la gestión de productos, categorías, stock, usuarios y autenticación en la tienda de ropa online. Está desarrollado con **Spring Boot**, **Java 21/25**, **Maven** y **H2 Database** (base de datos en memoria).
 
 ---
 
@@ -9,7 +9,7 @@ Este es el microservicio encargado de la gestión de productos en la tienda de r
 Sigue estos pasos para compilar y ejecutar la aplicación localmente:
 
 ### Requisitos previos
-* **Java 25** (OpenJDK) instalado.
+* **Java 21** o superior (OpenJDK) instalado.
 * El puerto **8080** libre en tu máquina.
 
 ### Pasos
@@ -32,57 +32,140 @@ Para ver la base de datos en tiempo real y realizar consultas SQL, puedes accede
 
 ---
 
-## 🔌 API Endpoints (para el Frontend)
+## 📐 Modelo de Datos (Multi-Entidad)
+
+El diseño del catálogo soporta prendas de vestir y control de acceso utilizando las siguientes entidades vinculadas:
+* **`Producto`**: Contiene la información general de la prenda (nombre, descripción, precio base, marca, URL de imagen, y categoría).
+* **`Variante`**: Representa la combinación física e inventario de un producto en un **talle** y **color** específico, con su propio **stock** y **código de barras** (SKU).
+* **`Categoria`**: Clasificación jerárquica para organizar las prendas (ej. Remeras, Pantalones, Camperas, Accesorios).
+* **`Usuario`**: Representa las cuentas registradas con información personal, credenciales encriptadas con BCrypt y un **Rol** (`CLIENTE` o `ADMIN`).
+
+---
+
+## 🔌 API Endpoints
 
 La URL base para todas las peticiones es: `http://localhost:8080`
 
-### 1. Listar todos los productos
-* **Método:** `GET`
-* **Endpoint:** `/productos`
-* **Descripción:** Devuelve una lista con todos los productos registrados.
-* **Respuesta Exitosa (200 OK):**
-  ```json
-  [
-    {
-      "id": 1,
-      "nombre": "Remera de Algodón Classic",
-      "descripcion": "Remera clásica de algodón 100% peinado.",
-      "precio": 15990.00,
-      "stock": 35,
-      "codigoBarras": "7791234567890",
-      "activo": true,
-      "fechaCreacion": "2026-06-17T17:00:00",
-      "fechaActualizacion": "2026-06-17T17:00:00"
-    }
-  ]
-  ```
+### 🔑 Módulo de Autenticación (`/api/auth`)
 
-### 2. Guardar un nuevo producto
+#### 1. Registrar un nuevo usuario (Público)
 * **Método:** `POST`
-* **Endpoint:** `/productos`
-* **Descripción:** Crea un nuevo producto en la base de datos.
+* **Endpoint:** `/api/auth/register`
 * **Cuerpo de la Petición (Request Body - JSON):**
   ```json
   {
-    "nombre": "Remera de Algodón Classic",
-    "descripcion": "Remera clásica de algodón 100% peinado.",
-    "precio": 15990.00,
-    "stock": 35,
-    "codigoBarras": "7791234567890",
-    "activo": true
+    "nombre": "Juan",
+    "apellido": "Perez",
+    "email": "juan.perez@example.com",
+    "password": "secure123"
   }
   ```
-* **Respuesta Exitosa (200 OK / 201 Created):** Retorna el producto creado con su `id` y fechas de auditoría autogeneradas.
+  *(Nota: Para registrar una cuenta con rol `ADMIN`, puedes enviar opcionalmente el campo `"adminPasscode": "URBANWEAR-SECRET-ADMIN-2026"`)*
+
+#### 2. Iniciar Sesión (Público)
+* **Método:** `POST`
+* **Endpoint:** `/api/auth/login`
+* **Cuerpo de la Petición:**
   ```json
   {
-    "id": 1,
-    "nombre": "Remera de Algodón Classic",
-    "descripcion": "Remera clásica de algodón 100% peinado.",
-    "precio": 15990.00,
-    "stock": 35,
-    "codigoBarras": "7791234567890",
-    "activo": true,
-    "fechaCreacion": "2026-06-17T17:00:00",
-    "fechaActualizacion": "2026-06-17T17:00:00"
+    "email": "juan.perez@example.com",
+    "password": "secure123"
   }
   ```
+* **Respuesta Exitosa (200 OK):** Retorna el token JWT que debe enviarse en la cabecera `Authorization: Bearer <token>` en las rutas protegidas.
+  ```json
+  {
+    "token": "eyJhbGciOiJIUzI1NiJ9.ey...",
+    "email": "juan.perez@example.com",
+    "rol": "CLIENTE",
+    "nombre": "Juan",
+    "apellido": "Perez"
+  }
+  ```
+
+---
+
+### 👤 Módulo de Usuarios (`/api/usuarios`)
+
+#### 1. Obtener mi perfil (Autenticado)
+* **Método:** `GET`
+* **Endpoint:** `/api/usuarios/me`
+
+#### 2. Actualizar mi perfil (Autenticado)
+* **Método:** `PUT`
+* **Endpoint:** `/api/usuarios/me`
+* **Cuerpo de la Petición:**
+  ```json
+  {
+    "nombre": "Juan Carlos",
+    "apellido": "Perez",
+    "password": "newpassword123" // Opcional
+  }
+  ```
+
+#### 3. Listar todos los usuarios (Solo ADMIN)
+* **Método:** `GET`
+* **Endpoint:** `/api/usuarios`
+
+#### 4. Cambiar rol de un usuario (Solo ADMIN)
+* **Método:** `PATCH`
+* **Endpoint:** `/api/usuarios/{id}/rol`
+* **Parámetros de Query:**
+  * `rol` (ej: `/api/usuarios/1/rol?rol=ADMIN`)
+
+#### 5. Dar de baja a un usuario (Solo ADMIN)
+* **Método:** `DELETE`
+* **Endpoint:** `/api/usuarios/{id}`
+* **Descripción:** Realiza la baja lógica (`activo = false`) de la cuenta.
+
+---
+
+### 👕 Módulo de Productos (`/api/productos`)
+
+#### 1. Listar Productos (Público - Paginado y Filtrado)
+* **Método:** `GET`
+* **Endpoint:** `/api/productos`
+* **Parámetros de Filtro (Query Params - Opcionales):**
+  * `nombre`, `categoriaId`, `talle`, `color`, `precioMin`, `precioMax`, `activo`, `page`, `size`
+
+#### 2. Obtener un Producto por ID (Público)
+* **Método:** `GET`
+* **Endpoint:** `/api/productos/{id}`
+
+#### 3. Guardar un nuevo Producto con Variantes (Solo ADMIN)
+* **Método:** `POST`
+* **Endpoint:** `/api/productos`
+* **Cuerpo de la Petición (Request Body - JSON):**
+  ```json
+  {
+    "nombre": "Remera Slim Fit",
+    "descripcion": "Remera de algodón de alta calidad",
+    "precio": 15000.00,
+    "marca": "UrbanWear",
+    "imagenUrl": "http://images.com/remera.png",
+    "categoriaId": 1,
+    "variantes": [
+      {
+        "talle": "M",
+        "color": "Negro",
+        "stock": 20
+      }
+    ]
+  }
+  ```
+
+#### 4. Actualizar un Producto (Solo ADMIN)
+* **Método:** `PUT`
+* **Endpoint:** `/api/productos/{id}`
+
+#### 5. Agregar una Variante (Solo ADMIN)
+* **Método:** `POST`
+* **Endpoint:** `/api/productos/{id}/variantes`
+
+#### 6. Actualizar el Stock de una Variante (Solo ADMIN)
+* **Método:** `PATCH`
+* **Endpoint:** `/api/productos/variantes/{varianteId}/stock?stock=50`
+
+#### 7. Dar de baja un Producto (Solo ADMIN)
+* **Método:** `DELETE` o `PATCH`
+* **Endpoint:** `/api/productos/{id}` o `/api/productos/{id}/activo?activo=false`
