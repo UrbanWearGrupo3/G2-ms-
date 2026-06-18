@@ -25,14 +25,20 @@ public class Producto {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @Column(nullable = false)
-    private Integer stock;
+    private String marca;
 
-    @Column(name = "codigo_barras", unique = true)
-    private String codigoBarras;
+    @Column(name = "imagen_url")
+    private String imagenUrl;
 
     @Column(nullable = false)
     private Boolean activo = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoria_id")
+    private Categoria categoria;
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<Variante> variantes = new java.util.ArrayList<>();
 
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
