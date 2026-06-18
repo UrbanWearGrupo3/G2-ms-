@@ -39,4 +39,8 @@ public class ProductoService {
     public List<Producto> findByNombreContaining(String nombre) {
         return productoRepository.findByNombreContaining(nombre);
     }
+
+    public List<Producto> getProductsByCategory(String categoria) {
+        return productoRepository.findByCategoria(categoria);
+    }
 }
