@@ -1,6 +1,6 @@
 # Tienda de Ropa - Backend (Microservicio de Productos)
 
-Este es el microservicio encargado de la gestión de productos en la tienda de ropa, desarrollado con **Spring Boot**, **Java 25**, **Maven** y **H2 Database** (base de datos en memoria).
+Este es el microservicio encargado de la gestión de productos, categorías y stock en la tienda de ropa online. Está desarrollado con **Spring Boot**, **Java 21/25**, **Maven** y **H2 Database** (base de datos en memoria).
 
 ---
 
@@ -9,7 +9,7 @@ Este es el microservicio encargado de la gestión de productos en la tienda de r
 Sigue estos pasos para compilar y ejecutar la aplicación localmente:
 
 ### Requisitos previos
-* **Java 25** (OpenJDK) instalado.
+* **Java 21** o superior (OpenJDK) instalado.
 * El puerto **8080** libre en tu máquina.
 
 ### Pasos
@@ -32,57 +32,132 @@ Para ver la base de datos en tiempo real y realizar consultas SQL, puedes accede
 
 ---
 
-## 🔌 API Endpoints (para el Frontend)
+## 📐 Modelo de Datos (Multi-Entidad)
+
+El diseño del catálogo soporta prendas de vestir utilizando las siguientes entidades vinculadas:
+* **`Producto`**: Contiene la información general de la prenda (nombre, descripción, precio base, marca, URL de imagen, y categoría).
+* **`Variante`**: Representa la combinación física e inventario de un producto en un **talle** y **color** específico, con su propio **stock** y **código de barras** (SKU).
+* **`Categoria`**: Clasificación jerárquica para organizar las prendas (ej. Remeras, Pantalones, Camperas, Accesorios).
+
+---
+
+## 🔌 API Endpoints
 
 La URL base para todas las peticiones es: `http://localhost:8080`
 
-### 1. Listar todos los productos
+### 1. Listar Productos (Catálogo Paginado y Filtrado)
 * **Método:** `GET`
-* **Endpoint:** `/productos`
-* **Descripción:** Devuelve una lista con todos los productos registrados.
+* **Endpoint:** `/api/productos`
+* **Parámetros de Filtro (Query Params - Opcionales):**
+  * `nombre` (búsqueda parcial insensible a mayúsculas/minúsculas)
+  * `categoriaId` (filtro por ID de la categoría)
+  * `talle` (filtro exacto de talle, ej: `M`)
+  * `color` (filtro exacto de color, ej: `Negro`)
+  * `precioMin` / `precioMax` (rango de precio base)
+  * `activo` (por defecto `true` para ver prendas publicadas)
+  * `page` (número de página, base 0)
+  * `size` (elementos por página, por defecto 12)
 * **Respuesta Exitosa (200 OK):**
   ```json
-  [
-    {
-      "id": 1,
-      "nombre": "Remera de Algodón Classic",
-      "descripcion": "Remera clásica de algodón 100% peinado.",
-      "precio": 15990.00,
-      "stock": 35,
-      "codigoBarras": "7791234567890",
-      "activo": true,
-      "fechaCreacion": "2026-06-17T17:00:00",
-      "fechaActualizacion": "2026-06-17T17:00:00"
+  {
+    "content": [
+      {
+        "id": 1,
+        "nombre": "Remera Slim Fit",
+        "descripcion": "Remera de algodón de alta calidad",
+        "precio": 15000.00,
+        "marca": "UrbanWear",
+        "imagenUrl": "http://images.com/remera.png",
+        "activo": true,
+        "categoria": {
+          "id": 1,
+          "nombre": "Remeras",
+          "descripcion": "Remeras de todo tipo",
+          "activo": true
+        },
+        "variantes": [
+          {
+            "id": 1,
+            "talle": "M",
+            "color": "Negro",
+            "stock": 20,
+            "codigoBarras": "BAR-REMERAM-NEG"
+          }
+        ],
+        "fechaCreacion": "2026-06-18T10:00:00",
+        "fechaActualizacion": "2026-06-18T10:00:00"
+      }
+    ],
+    "page": {
+      "size": 12,
+      "number": 0,
+      "totalElements": 1,
+      "totalPages": 1
     }
-  ]
+  }
   ```
 
-### 2. Guardar un nuevo producto
+### 2. Obtener un Producto por ID
+* **Método:** `GET`
+* **Endpoint:** `/api/productos/{id}`
+* **Respuesta Exitosa (200 OK):** Retorna el detalle del producto y sus variantes asociadas.
+
+### 3. Guardar un nuevo Producto con Variantes
 * **Método:** `POST`
-* **Endpoint:** `/productos`
-* **Descripción:** Crea un nuevo producto en la base de datos.
+* **Endpoint:** `/api/productos`
 * **Cuerpo de la Petición (Request Body - JSON):**
   ```json
   {
-    "nombre": "Remera de Algodón Classic",
-    "descripcion": "Remera clásica de algodón 100% peinado.",
-    "precio": 15990.00,
-    "stock": 35,
-    "codigoBarras": "7791234567890",
-    "activo": true
+    "nombre": "Remera Slim Fit",
+    "descripcion": "Remera de algodón de alta calidad",
+    "precio": 15000.00,
+    "marca": "UrbanWear",
+    "imagenUrl": "http://images.com/remera.png",
+    "categoriaId": 1,
+    "variantes": [
+      {
+        "talle": "M",
+        "color": "Negro",
+        "stock": 20,
+        "codigoBarras": "BAR-REMERAM-NEG"
+      }
+    ]
   }
   ```
-* **Respuesta Exitosa (200 OK / 201 Created):** Retorna el producto creado con su `id` y fechas de auditoría autogeneradas.
+  *(Nota: Si no envías `codigoBarras` en la variante, el sistema autogenerará uno único)*
+
+### 4. Actualizar datos generales de un Producto
+* **Método:** `PUT`
+* **Endpoint:** `/api/productos/{id}`
+* **Cuerpo de la Petición:** JSON similar al del `POST` (modifica campos generales).
+
+### 5. Agregar una Variante a un Producto existente
+* **Método:** `POST`
+* **Endpoint:** `/api/productos/{id}/variantes`
+* **Cuerpo de la Petición:**
   ```json
   {
-    "id": 1,
-    "nombre": "Remera de Algodón Classic",
-    "descripcion": "Remera clásica de algodón 100% peinado.",
-    "precio": 15990.00,
-    "stock": 35,
-    "codigoBarras": "7791234567890",
-    "activo": true,
-    "fechaCreacion": "2026-06-17T17:00:00",
-    "fechaActualizacion": "2026-06-17T17:00:00"
+    "talle": "L",
+    "color": "Negro",
+    "stock": 15,
+    "codigoBarras": "BAR-REMERAL-NEG"
   }
   ```
+
+### 6. Actualizar el Stock de una Variante
+* **Método:** `PATCH`
+* **Endpoint:** `/api/productos/variantes/{varianteId}/stock`
+* **Parámetros de Query (Query Params - Obligatorios):**
+  * `stock` (ej: `/api/productos/variantes/1/stock?stock=50`)
+
+### 7. Activar/Desactivar un Producto (Baja Lógica)
+* **Método:** `PATCH`
+* **Endpoint:** `/api/productos/{id}/activo`
+* **Parámetros de Query:**
+  * `activo` (ej: `/api/productos/1/activo?activo=false`)
+
+### 8. Eliminar Producto (Desactivación)
+* **Método:** `DELETE`
+* **Endpoint:** `/api/productos/{id}`
+* **Descripción:** Realiza la desactivación por defecto del producto (baja lógica).
+* **Respuesta:** `204 No Content`.
