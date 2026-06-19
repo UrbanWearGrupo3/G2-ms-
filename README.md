@@ -169,3 +169,15 @@ La URL base para todas las peticiones es: `http://localhost:8080`
 #### 7. Dar de baja un Producto (Solo ADMIN)
 * **Método:** `DELETE` o `PATCH`
 * **Endpoint:** `/api/productos/{id}` o `/api/productos/{id}/activo?activo=false`
+
+#### 8. Cargar Imagen de Producto (Solo ADMIN)
+* **Método:** `POST`
+* **Endpoint:** `/api/productos/upload`
+* **Cuerpo de la Petición:** `multipart/form-data` con la clave `file` (tipo Archivo/File) conteniendo la imagen a subir.
+* **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "url": "https://rujrnngxhrouaqjeurkp.supabase.co/storage/v1/object/public/productos/uuid_generado.png"
+  }
+  ```
+

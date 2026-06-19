@@ -41,7 +41,9 @@ public class SecurityConfig {
                 // Rutas públicas de autenticación y base de datos h2
                 .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
                 // El catálogo de ropa es público para lectura
-                .requestMatchers(HttpMethod.GET, "/api/productos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()
+                // Carga de imágenes de productos (solo administradores)
+                .requestMatchers(HttpMethod.POST, "/api/productos/upload").hasRole("ADMIN")
                 // Solo administradores pueden agregar/modificar productos y variantes
                 .requestMatchers("/api/productos/**").hasRole("ADMIN")
                 // Los usuarios autenticados pueden ver y actualizar su perfil

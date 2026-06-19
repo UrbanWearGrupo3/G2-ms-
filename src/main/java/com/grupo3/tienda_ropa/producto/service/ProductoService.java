@@ -26,14 +26,18 @@ public class ProductoService {
     private final ProductoRepository productoRepository;
     private final VarianteRepository varianteRepository;
     private final CategoriaRepository categoriaRepository;
+    private final SupabaseStorageService storageService;
 
     public ProductoService(ProductoRepository productoRepository,
                            VarianteRepository varianteRepository,
-                           CategoriaRepository categoriaRepository) {
+                           CategoriaRepository categoriaRepository,
+                           SupabaseStorageService storageService) {
         this.productoRepository = productoRepository;
         this.varianteRepository = varianteRepository;
         this.categoriaRepository = categoriaRepository;
+        this.storageService = storageService;
     }
+
 
     // --- PRODUCT LOGIC ---
     // --- GUARDAR PRODUCTOS---
@@ -82,6 +86,12 @@ public class ProductoService {
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
                         "Categoría no encontrada con id: " + request.getCategoriaId()));
+
+        // Limpiar la imagen anterior en Supabase Storage únicamente cuando se reemplace por una nueva
+        String oldImageUrl = producto.getImagenUrl();
+        if (oldImageUrl != null && !oldImageUrl.equals(request.getImagenUrl())) {
+            storageService.deleteImageByUrl(oldImageUrl);
+        }
 
         producto.setNombre(request.getNombre());
         producto.setDescripcion(request.getDescripcion());
