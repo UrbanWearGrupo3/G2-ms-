@@ -1,62 +1,90 @@
 package com.grupo3.tienda_ropa.Pedidos.service;
 
-import com.grupo3.tienda_ropa.Pedidos.deto.PedidoMapper;
-import com.grupo3.tienda_ropa.Pedidos.deto.PedidoResponse;
-import com.grupo3.tienda_ropa.Pedidos.entity.Pedido;
-import com.grupo3.tienda_ropa.Pedidos.repository.PedidosRepository;
-import com.grupo3.tienda_ropa.usuario.entity.Usuario;
-import com.grupo3.tienda_ropa.usuario.repository.UsuarioRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
+import com.grupo3.tienda_ropa.Pedidos.entity.Pedido;
+import com.grupo3.tienda_ropa.Pedidos.entity.PedidosDetalles;
+import com.grupo3.tienda_ropa.Pedidos.repository.DetallePedidosRepository;
+import com.grupo3.tienda_ropa.Pedidos.repository.PedidosRepository;
+import com.grupo3.tienda_ropa.carrito.entitys.CarritoEntity;
+import com.grupo3.tienda_ropa.carrito.entitys.CarritoItem;
+import com.grupo3.tienda_ropa.carrito.repository.CarritoItemRepo;
+import com.grupo3.tienda_ropa.carrito.repository.CarritoRepository;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class PedidoService {
 
-    private final PedidosRepository pedidoRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final PedidoMapper pedidoMapper;
+    private final CarritoRepository carritoRepository;
+    private final CarritoItemRepo carritoItemRepo;
+    private final PedidosRepository pedidosRepository;
+    private final DetallePedidosRepository detallePedidosRepository;
 
-    public PedidoService(
-            PedidosRepository pedidoRepository,
-            UsuarioRepository usuarioRepository,
-            PedidoMapper pedidoMapper
-    ) {
-        this.pedidoRepository = pedidoRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.pedidoMapper = pedidoMapper;
-    }
+    public Pedido confirmarPedido(Long usuarioId) {
 
-    public List<Pedido> obtenerTodos() {
-        return pedidoRepository.findAll();
-    }
+        CarritoEntity carrito = carritoRepository
+                .findByUsuario_Id(usuarioId)
+                .orElseThrow(() ->
+                        new RuntimeException("Carrito no encontrado"));
 
-    public List<PedidoResponse> obtenerMisPedidos(String email) {
+        List<CarritoItem> items =
+                carritoItemRepo.findByCarritoId(carrito.getId());
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (items.isEmpty()) {
+            throw new RuntimeException("El carrito está vacío");
+        }
 
-        return pedidoRepository.findByUsuarioId(usuario.getId())
-                .stream()
-                .map(pedidoMapper::toResponse)
+       // ...existing code...
+        Pedido pedido = new Pedido();
+
+        pedido.setUsuario(carrito.getUsuario());
+        // Si tu entidad Pedido tiene estado
+        pedido.setEstado("PENDIENTE");
+
+        Pedido pedidoGuardado = pedidosRepository.save(pedido);
+
+        List<PedidosDetalles> detalles = items.stream()
+                .map(item -> {
+
+                    PedidosDetalles detalle = new PedidosDetalles();
+
+                    detalle.setPedido(pedidoGuardado);
+                    detalle.setProducto(item.getProducto());
+                    detalle.setCantidad(item.getCantidad());
+
+                    return detalle;
+                })
                 .toList();
+
+        detallePedidosRepository.saveAll(detalles);
+
+        carritoItemRepo.deleteAll(items);
+
+       return pedidoGuardado;
     }
 
-    public List<Pedido> obtenerMisPedidosPorEstado(
-            String email,
-            String estado
-    ) {
 
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        return pedidoRepository.findByUsuarioIdAndEstado(
-                usuario.getId(),
-                estado
-        );
+    public List<Pedido> obtenerPedidosUsuario(Long usuarioId) {
+        return pedidosRepository.findByUsuarioId(usuarioId);
     }
 
     public List<Pedido> obtenerPedidosPorEstado(String estado) {
-        return pedidoRepository.findByEstado(estado);
+        return pedidosRepository.findByEstado(estado);
     }
+
+    public List<Pedido> obtenerPedidosUsuarioPorEstado(
+            Long usuarioId,
+            String estado
+    ) {
+        return pedidosRepository.findByUsuarioIdAndEstado(usuarioId, estado);
+    }
+    public List<Pedido> obtenerTodosLosPedidos() {
+    return pedidosRepository.findAll();
+}
 }
