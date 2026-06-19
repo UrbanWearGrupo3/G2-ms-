@@ -79,7 +79,7 @@ public class PedidoController {
                 )
         );
     }
-        @PatchMapping("/{id}/estado")
+    @PatchMapping("/{id}/estado")
     public ResponseEntity<Pedido> actualizarEstado(
             @PathVariable Long id,
             @RequestParam String estado) {

@@ -1,11 +1,14 @@
 package com.grupo3.tienda_ropa.carrito.controllers;
 
+import com.grupo3.tienda_ropa.carrito.dtos.CarritoItemRequest;
+import com.grupo3.tienda_ropa.carrito.dtos.CarritoItemResponse;
 import com.grupo3.tienda_ropa.carrito.entitys.CarritoItem;
 import com.grupo3.tienda_ropa.carrito.service.CarritoItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -16,19 +19,42 @@ public class CarritoItemController {
     private final CarritoItemService carritoItemService;
     //Cargar Carrito
     @PostMapping
-    public ResponseEntity<CarritoItem> agregarProducto(
+    public ResponseEntity<CarritoItemResponse> agregarProducto(
             @PathVariable Long carritoId,
-            @RequestParam Long productoId,
-            @RequestParam Integer cantidad
+            @RequestBody CarritoItemRequest request
     ) {
 
         CarritoItem item = carritoItemService.agregarProducto(
                 carritoId,
-                productoId,
-                cantidad
+                request.getProductoId(),
+                request.getCantidad()
         );
 
-        return ResponseEntity.ok(item);
+        return ResponseEntity.ok(convertirResponse(item));
+    }
+
+    private CarritoItemResponse convertirResponse(CarritoItem item) {
+
+        CarritoItemResponse response = new CarritoItemResponse();
+
+        response.setId(item.getId());
+        response.setCantidad(item.getCantidad());
+
+        response.setProductoId(item.getProducto().getId());
+        response.setNombreProducto(item.getProducto().getNombre());
+        response.setDescripcion(item.getProducto().getDescripcion());
+        response.setImagenUrl(item.getProducto().getImagenUrl());
+        response.setPrecio(item.getProducto().getPrecio());
+
+        response.setVariantes(List.of());
+
+        response.setSubtotal(
+                item.getProducto()
+                        .getPrecio()
+                        .multiply(BigDecimal.valueOf(item.getCantidad()))
+        );
+
+        return response;
     }
 
     @GetMapping
