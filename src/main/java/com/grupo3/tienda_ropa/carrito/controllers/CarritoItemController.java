@@ -57,30 +57,35 @@ public class CarritoItemController {
         return response;
     }
 
-    @GetMapping
-    public ResponseEntity<List<CarritoItem>> obtenerItems(
-            @PathVariable Long carritoId
-    ) {
+  @GetMapping
+public ResponseEntity<List<CarritoItemResponse>> obtenerItems(
+        @PathVariable Long carritoId
+) {
 
-        return ResponseEntity.ok(
-                carritoItemService.obtenerItems(carritoId)
-        );
-    }
+    List<CarritoItemResponse> items =
+            carritoItemService.obtenerItems(carritoId)
+                    .stream()
+                    .map(this::convertirResponse)
+                    .toList();
 
-    @GetMapping("/{productoId}")
-    public ResponseEntity<CarritoItem> obtenerItem(
-            @PathVariable Long carritoId,
-            @PathVariable Long productoId
-    ) {
+    return ResponseEntity.ok(items);
+}
 
-        return ResponseEntity.ok(
-                carritoItemService.obtenerItem(
-                        carritoId,
-                        productoId
-                )
-        );
-    }
+  @GetMapping("/{productoId}")
+public ResponseEntity<CarritoItemResponse> obtenerItem(
+        @PathVariable Long carritoId,
+        @PathVariable Long productoId
+) {
 
+    CarritoItem item = carritoItemService.obtenerItem(
+            carritoId,
+            productoId
+    );
+
+    return ResponseEntity.ok(
+            convertirResponse(item)
+    );
+}
 
     @PutMapping("/{productoId}/disminuir")
     public ResponseEntity<Void> disminuirCantidad(
@@ -97,20 +102,23 @@ public class CarritoItemController {
     }
 
     @PutMapping("/{productoId}")
-    public ResponseEntity<CarritoItem> actualizarCantidad(
-            @PathVariable Long carritoId,
-            @PathVariable Long productoId,
-            @RequestParam Integer cantidad
-    ) {
+public ResponseEntity<CarritoItemResponse> actualizarCantidad(
+        @PathVariable Long carritoId,
+        @PathVariable Long productoId,
+        @RequestParam Integer cantidad
+) {
 
-        return ResponseEntity.ok(
-                carritoItemService.actualizarCantidad(
-                        carritoId,
-                        productoId,
-                        cantidad
-                )
-        );
-    }
+    CarritoItem item =
+            carritoItemService.actualizarCantidad(
+                    carritoId,
+                    productoId,
+                    cantidad
+            );
+
+    return ResponseEntity.ok(
+            convertirResponse(item)
+    );
+}
 
     @DeleteMapping("/{productoId}")
     public ResponseEntity<Void> eliminarProducto(
