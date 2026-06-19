@@ -1,6 +1,5 @@
 package com.grupo3.tienda_ropa.Pedidos.entity;
 
-import com.grupo3.tienda_ropa.carrito.entitys.CarritoEntity;
 import com.grupo3.tienda_ropa.producto.entity.Producto;
 
 import jakarta.persistence.Column;

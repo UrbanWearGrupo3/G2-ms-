@@ -86,5 +86,14 @@ public class PedidoService {
     }
     public List<Pedido> obtenerTodosLosPedidos() {
     return pedidosRepository.findAll();
-}
+    }
+    public Pedido actualizarEstado(Long pedidoId, String nuevoEstado) {
+
+        Pedido pedido = pedidosRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+
+        pedido.setEstado(nuevoEstado);
+
+        return pedidosRepository.save(pedido);
+    }
 }

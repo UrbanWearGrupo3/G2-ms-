@@ -34,6 +34,7 @@ public class PedidoController {
 
     @GetMapping
     public ResponseEntity<List<Pedido>> obtenerTodosLosPedidos() {
+        
         return ResponseEntity.ok(
                 pedidoService.obtenerTodosLosPedidos()
         );
@@ -51,7 +52,6 @@ public class PedidoController {
                 pedidoService.obtenerPedidosUsuario(usuarioId)
         );
     }
-
     @GetMapping("/estado/{estado}")
     public ResponseEntity<List<Pedido>> obtenerPedidosPorEstado(
             @PathVariable String estado
@@ -78,5 +78,14 @@ public class PedidoController {
                         estado
                 )
         );
+    }
+        @PatchMapping("/{id}/estado")
+    public ResponseEntity<Pedido> actualizarEstado(
+            @PathVariable Long id,
+            @RequestParam String estado) {
+
+        Pedido pedidoActualizado = pedidoService.actualizarEstado(id, estado);
+
+        return ResponseEntity.ok(pedidoActualizado);
     }
 }
