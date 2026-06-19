@@ -2,8 +2,10 @@ package com.grupo3.tienda_ropa;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
+@EnableAsync
 public class TiendaRopaApplication {
 
 	public static void main(String[] args) {

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Oferta Especial - UrbanWear</title>
+</head>
+<body style="font-family: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #121212; padding: 30px; margin: 0; color: #ffffff;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #1a1a1a; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); border: 1px solid #333;">
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #ffffff; letter-spacing: 4px; margin: 0; font-size: 32px; text-transform: uppercase; font-weight: 700;">UrbanWear</h1>
+            <p style="color: #00e676; font-size: 14px; margin: 5px 0 0 0; text-transform: uppercase; letter-spacing: 2px;">Exclusivo para ti</p>
+        </div>
+
+        <h2 style="color: #ffffff; font-size: 22px; font-weight: 600; text-align: center; margin-bottom: 20px;">¡Hola, <span th:text="${clientName}">Urban Lover</span>!</h2>
+        
+        <div style="background: linear-gradient(135deg, #2c3e50, #3498db); border-radius: 8px; padding: 30px; text-align: center; margin: 25px 0;">
+            <h3 style="margin: 0; font-size: 24px; color: #ffffff;">NUEVA TEMPORADA</h3>
+            <p style="font-size: 16px; margin: 10px 0 20px 0; color: #e0e0e0;">Usa el código abajo para obtener un descuento especial en toda la tienda.</p>
+            <div style="display: inline-block; background-color: #00e676; color: #121212; font-size: 22px; font-weight: 700; padding: 12px 30px; border-radius: 4px; letter-spacing: 2px;" th:text="${discountCode}">
+                WINTER20
+            </div>
+        </div>
+
+        <p style="color: #aaaaaa; font-size: 15px; line-height: 1.6; text-align: center;">
+            Renueva tu estilo con lo último de nuestra colección urbana. Camperas, jeans, hoodies y mucho más con envío gratis por compras superiores a $15.000.
+        </p>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="https://urbanwear.com" style="display: inline-block; background-color: #ffffff; color: #121212; text-decoration: none; padding: 14px 40px; border-radius: 25px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Ir a la tienda</a>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #333; margin: 40px 0;">
+
+        <p style="color: #666666; font-size: 11px; text-align: center; margin: 0; line-height: 1.5;">
+            Recibiste este correo porque estás suscrito a las novedades de UrbanWear. Si deseas dejar de recibir estas ofertas, puedes desuscribirte haciendo clic <a href="#" style="color: #00e676;">aquí</a>.
+        </p>
+    </div>
+</body>
+</html>
