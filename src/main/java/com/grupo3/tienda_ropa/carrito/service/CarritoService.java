@@ -25,7 +25,6 @@ public class CarritoService {
                             usuarioService.obtenerUsuarioPorId(usuarioId);
 
                     CarritoEntity carrito = new CarritoEntity();
-
                     carrito.setUsuario(usuario);
 
                     return carritoRepository.save(carrito);
@@ -40,13 +39,7 @@ public class CarritoService {
         return obtenerOCrearCarrito(usuario.getId());
     }
 
-    @Transactional(readOnly = true)
     public CarritoEntity obtenerCarrito(Long usuarioId) {
-
-        return carritoRepository.findByUsuario_Id(usuarioId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Carrito no encontrado"
-                        ));
+        return obtenerOCrearCarrito(usuarioId);
     }
 }

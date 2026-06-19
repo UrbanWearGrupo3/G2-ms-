@@ -81,22 +81,6 @@ public class CarritoItemService {
                         ));
     }
 
-    public CarritoItem aumentarCantidad(
-            Long carritoId,
-            Long productoId
-    ) {
-
-        CarritoItem item = obtenerItem(
-                carritoId,
-                productoId
-        );
-
-        item.setCantidad(
-                item.getCantidad() + 1
-        );
-
-        return carritoItemRepo.save(item);
-    }
     public void disminuirCantidad(
             Long carritoId,
             Long productoId
