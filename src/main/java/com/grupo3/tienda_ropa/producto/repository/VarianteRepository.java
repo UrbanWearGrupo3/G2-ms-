@@ -12,4 +12,5 @@ public interface VarianteRepository extends JpaRepository<Variante, Long> {
     Optional<Variante> findByCodigoBarras(String codigoBarras);
     List<Variante> findByProductoId(Long productoId);
     boolean existsByProductoIdAndTalleIgnoreCaseAndColorIgnoreCase(Long productoId, String talle, String color);
+    Optional<Variante> findById(Long varianteId);
 }

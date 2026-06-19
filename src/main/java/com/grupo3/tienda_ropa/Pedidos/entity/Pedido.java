@@ -1,6 +1,7 @@
 package com.grupo3.tienda_ropa.Pedidos.entity;
 
-import com.grupo3.tienda_ropa.usuario.entity.Usuario;
+import com.grupo3.tienda_ropa.carrito.entitys.CarritoEntity;
+import com.grupo3.tienda_ropa.carrito.entitys.CarritoItem;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,15 +29,15 @@ public class Pedido {
     private String direccionEnvio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario;
+    @JoinColumn(name = "carrito_id", nullable = false)
+    private CarritoEntity carritoDatos;
 
     @OneToMany(
             mappedBy = "pedido",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<DetallePedidoEntity> detalles;
+    private List<CarritoItem> detalles;
 
     @PrePersist
     public void prePersist() {

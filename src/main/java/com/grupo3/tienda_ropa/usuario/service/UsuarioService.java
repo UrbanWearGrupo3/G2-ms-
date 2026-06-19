@@ -80,7 +80,10 @@ public class UsuarioService {
 
         return response;
     }
-
+    public Usuario obtenerUsuarioPorId(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+    }
     public UsuarioResponse getProfile(String email) {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
@@ -106,7 +109,7 @@ public class UsuarioService {
     public Page<UsuarioResponse> findAll(Pageable pageable) {
         return usuarioRepository.findAll(pageable).map(this::mapToResponse);
     }
-
+  
     @Transactional
     public UsuarioResponse updateRol(Long id, Rol nuevoRol) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -137,4 +140,12 @@ public class UsuarioService {
         resp.setFechaCreacion(usuario.getFechaCreacion());
         return resp;
     }
+    public Usuario obtenerUsuarioPorEmail(String email) {
+
+    return usuarioRepository.findByEmail(email)
+            .orElseThrow(() ->
+                    new IllegalArgumentException(
+                            "Usuario no encontrado"
+                    ));
+}
 }

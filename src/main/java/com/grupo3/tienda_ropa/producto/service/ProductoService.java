@@ -36,7 +36,7 @@ public class ProductoService {
     }
 
     // --- PRODUCT LOGIC ---
-
+    // --- GUARDAR PRODUCTOS---
     public ProductoResponse save(ProductoRequest request) {
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
@@ -73,7 +73,7 @@ public class ProductoService {
         Producto saved = productoRepository.save(producto);
         return mapToProductoResponse(saved);
     }
-
+        //--- UPDATE PRODUCTOS ---
     public ProductoResponse update(Long id, ProductoRequest request) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
@@ -93,7 +93,7 @@ public class ProductoService {
         Producto saved = productoRepository.save(producto);
         return mapToProductoResponse(saved);
     }
-
+    /// --- GET FIND BY ID---
     @Transactional(readOnly = true)
     public ProductoResponse findById(Long id) {
         Producto producto = productoRepository.findById(id)
@@ -111,6 +111,7 @@ public class ProductoService {
                 precioMin, precioMax, nombre, activeFilter, pageable);
         return page.map(this::mapToProductoResponse);
     }
+    
 
     public void deleteById(Long id) {
         Producto producto = productoRepository.findById(id)
@@ -162,6 +163,7 @@ public class ProductoService {
 
         return mapToProductoResponse(producto);
     }
+
 
     public ProductoResponse updateStock(Long varianteId, Integer nuevoStock) {
         Variante variante = varianteRepository.findById(varianteId)
@@ -231,4 +233,5 @@ public class ProductoService {
 
         return res;
     }
+
 }
