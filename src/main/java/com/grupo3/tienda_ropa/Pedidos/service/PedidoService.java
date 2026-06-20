@@ -1,5 +1,7 @@
 package com.grupo3.tienda_ropa.Pedidos.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -40,12 +42,16 @@ public class PedidoService {
             throw new RuntimeException("El carrito está vacío");
         }
 
-       // ...existing code...
+        BigDecimal total = items.stream()
+                .map(item -> item.getProducto().getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         Pedido pedido = new Pedido();
 
         pedido.setUsuario(carrito.getUsuario());
-        // Si tu entidad Pedido tiene estado
         pedido.setEstado("PENDIENTE");
+        pedido.setFecha(LocalDateTime.now());
+        pedido.setTotal(total);
 
         Pedido pedidoGuardado = pedidosRepository.save(pedido);
 
@@ -87,6 +93,11 @@ public class PedidoService {
     public List<Pedido> obtenerTodosLosPedidos() {
     return pedidosRepository.findAll();
     }
+    public Pedido obtenerPedidoPorId(Long pedidoId) {
+        return pedidosRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+    }
+
     public Pedido actualizarEstado(Long pedidoId, String nuevoEstado) {
 
         Pedido pedido = pedidosRepository.findById(pedidoId)

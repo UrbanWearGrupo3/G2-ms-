@@ -38,4 +38,5 @@ private String direccionEnvio;
         orphanRemoval = true
 )
 private List<PedidosDetalles> detalles;
+//private List<Pago> pagos;
 }
