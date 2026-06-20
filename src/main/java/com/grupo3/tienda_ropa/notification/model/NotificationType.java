@@ -4,7 +4,8 @@ public enum NotificationType {
     BACKUP_ALERT("email/backup-alert"),
     ORDER_CONFIRMATION("email/order-confirmation"),
     PROMOTIONAL("email/promotional"),
-    PASSWORD_RESET("email/password-reset");
+    PASSWORD_RESET("email/password-reset"),
+    SHIPPING_UPDATE("email/shipping-update");
 
     private final String templatePath;
 
