@@ -3,6 +3,7 @@ package com.grupo3.tienda_ropa.notification.model;
 public enum NotificationType {
     BACKUP_ALERT("email/backup-alert"),
     ORDER_CONFIRMATION("email/order-confirmation"),
+    ORDER_STATUS_UPDATE("email/order-status-update"),
     PROMOTIONAL("email/promotional"),
     PASSWORD_RESET("email/password-reset");
 

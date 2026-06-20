@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Actualización de tu Pedido - UrbanWear</title>
+</head>
+<body style="font-family: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f7f9fa; padding: 30px; margin: 0;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e8ecef;">
+        
+        <!-- Header / Logo mockup -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1a1a1a; letter-spacing: 2px; margin: 0; font-size: 28px; text-transform: uppercase;">UrbanWear</h1>
+            <p style="color: #8c9ba5; font-size: 14px; margin: 5px 0 0 0;">Actualización de Pedido</p>
+        </div>
+
+        <h2 style="color: #2c3e50; font-size: 20px; font-weight: 600; margin-top: 0;">¡Hola, <span th:text="${clientName}">Cliente</span>!</h2>
+        <p style="color: #4a5568; font-size: 15px; line-height: 1.6;">
+            Queremos informarte que el estado de tu pedido **#<span th:text="${orderNumber}">12345</span>** ha sido actualizado.
+        </p>
+
+        <!-- Status badge -->
+        <div style="text-align: center; margin: 25px 0;">
+            <div style="display: inline-block; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 16px; letter-spacing: 0.5px; text-transform: uppercase; background-color: #edf2f7; color: #4a5568;"
+                 th:style="${newStatus == 'APROBADO' ? 'display: inline-block; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 16px; letter-spacing: 0.5px; text-transform: uppercase; background-color: #e6fffa; color: #00a389;' : 
+                            (newStatus == 'RECHAZADO' || newStatus == 'FALLIDO' ? 'display: inline-block; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 16px; letter-spacing: 0.5px; text-transform: uppercase; background-color: #fff5f5; color: #e53e3e;' : 
+                            'display: inline-block; padding: 12px 24px; border-radius: 50px; font-weight: bold; font-size: 16px; letter-spacing: 0.5px; text-transform: uppercase; background-color: #feebc8; color: #dd6b20;')}">
+                Estado: <span th:text="${newStatus}">PENDIENTE</span>
+            </div>
+        </div>
+
+        <p style="color: #4a5568; font-size: 15px; line-height: 1.6;" th:text="${statusMessage}">
+            Tu pedido está siendo procesado.
+        </p>
+
+        <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #edf2f7;">
+            <h3 style="color: #4a5568; font-size: 14px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                Detalles del Pedido
+            </h3>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="color: #718096; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">
+                        <th style="text-align: left; padding: 8px 0;">Producto</th>
+                        <th style="text-align: right; padding: 8px 0;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${items}" style="border-bottom: 1px solid #edf2f7; color: #2d3748; font-size: 14px;">
+                        <td style="padding: 12px 0;">
+                            <span th:text="${item.productoNombre}" style="font-weight: 500;">Remera Negra</span>
+                            <br>
+                            <span th:text="${'Cantidad: ' + item.cantidad}" style="font-size: 12px; color: #718096;">Cantidad: 1</span>
+                        </td>
+                        <td style="padding: 12px 0; text-align: right; font-weight: 500;" th:text="${'$' + item.precio}">$0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px; text-align: right; font-size: 18px; font-weight: 600; color: #1a1a1a;">
+                Total: <span th:text="${'$' + total}" style="color: #2b6cb0;">$0.00</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="http://localhost:5173/mis-pedidos" style="background-color: #1a1a1a; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block; letter-spacing: 1px; text-transform: uppercase; transition: background-color 0.2s;">Ver mis Pedidos</a>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+        <p style="color: #a0aec0; font-size: 12px; text-align: center; margin: 0;">
+            Si tienes alguna duda sobre tu compra, responde directamente a este correo o contáctanos a soporte@urbanwear.com.
+        </p>
+    </div>
+</body>
+</html>
