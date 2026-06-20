@@ -19,23 +19,25 @@ if [ -f "$SCRIPT_DIR/../.env" ]; then
 fi
 
 # 1. Configuración de Base de Datos y S3
-DB_HOST="aws-1-us-east-2.pooler.supabase.com"
-DB_PORT="5432" # Se recomienda conexión directa en lugar de pooler transaccional
-DB_USER="postgres.rujrnngxhrouaqjeurkp"
-DB_NAME="postgres"
+DB_HOST="${DB_HOST:?Error: DB_HOST no está definido en el entorno o en el archivo .env}"
+DB_PORT="${DB_PORT:-5432}" # Se recomienda conexión directa en lugar de pooler transaccional
+DB_USER="${DB_USERNAME:?Error: DB_USERNAME no está definido en el entorno o en el archivo .env}"
+DB_NAME="${DB_NAME:-postgres}"
 
 # Si DB_PASSWORD se cargó del .env, lo mapeamos para pg_dump
-if [ -n "$DB_PASSWORD" ]; then
-    export PGPASSWORD="$DB_PASSWORD"
+if [ -z "$DB_PASSWORD" ]; then
+    echo "Error: DB_PASSWORD no está definido en el entorno o en el archivo .env" >&2
+    exit 1
 fi
+export PGPASSWORD="$DB_PASSWORD"
 
 # Construir ruta S3 basada en el .env, con fallback
-BUCKET_NAME="${S3_BUCKET_NAME:-urbanwear-backups}"
+BUCKET_NAME="${S3_BUCKET_NAME:?Error: S3_BUCKET_NAME no está definido en el entorno o en el archivo .env}"
 S3_BUCKET="s3://$BUCKET_NAME/database"
 
 # 2. Configuración de Reportes del Backend
 API_REPORT_URL="http://localhost:8080/api/internal/backups/report"
-BACKUP_SECRET_TOKEN="${INTERNAL_TOKEN:-urbanwear-secret-token-2026}"
+BACKUP_SECRET_TOKEN="${INTERNAL_TOKEN:?Error: INTERNAL_TOKEN no está definido en el entorno o en el archivo .env}"
 
 # 3. Variables de Entorno Locales
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")

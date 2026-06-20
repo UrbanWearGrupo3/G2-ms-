@@ -1,5 +1,6 @@
 package com.grupo3.tienda_ropa.carrito.entitys;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.grupo3.tienda_ropa.producto.entity.Producto;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -16,8 +17,9 @@ public class CarritoItem {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "carrito_id", nullable = false)
-    private CarritoEntity carrito;
+@JoinColumn(name = "carrito_id")
+@JsonIgnore
+private CarritoEntity carrito;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)

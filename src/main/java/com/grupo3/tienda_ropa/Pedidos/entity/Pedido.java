@@ -1,7 +1,5 @@
 package com.grupo3.tienda_ropa.Pedidos.entity;
 
-import com.grupo3.tienda_ropa.carrito.entitys.CarritoEntity;
-import com.grupo3.tienda_ropa.carrito.entitys.CarritoItem;
 import com.grupo3.tienda_ropa.usuario.entity.Usuario;
 
 import jakarta.persistence.*;
@@ -40,4 +38,5 @@ private String direccionEnvio;
         orphanRemoval = true
 )
 private List<PedidosDetalles> detalles;
+//private List<Pago> pagos;
 }
