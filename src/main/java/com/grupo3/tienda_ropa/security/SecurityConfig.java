@@ -52,6 +52,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/usuarios/me").authenticated()
                         // Solo administradores pueden listar o gestionar otros usuarios
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
+                        // Cupones: Validar es para cualquier usuario autenticado, el resto es para ADMIN
+                        .requestMatchers(HttpMethod.POST, "/api/cupones/validar").authenticated()
+                        .requestMatchers("/api/cupones/**").hasRole("ADMIN")
                         // Cualquier otra petición requiere login básico
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))

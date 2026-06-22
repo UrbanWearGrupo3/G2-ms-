@@ -20,6 +20,12 @@ import com.grupo3.tienda_ropa.carrito.repository.CarritoRepository;
 import com.grupo3.tienda_ropa.notification.dto.NotificationRequest;
 import com.grupo3.tienda_ropa.notification.model.NotificationType;
 import com.grupo3.tienda_ropa.notification.service.EmailNotificationService;
+import com.grupo3.tienda_ropa.cupon.service.CuponService;
+import com.grupo3.tienda_ropa.usuario.repository.UsuarioRepository;
+import com.grupo3.tienda_ropa.producto.repository.ProductoRepository;
+import com.grupo3.tienda_ropa.usuario.entity.Usuario;
+import com.grupo3.tienda_ropa.producto.entity.Producto;
+import com.grupo3.tienda_ropa.Pedidos.deto.CompraDirectaRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +40,11 @@ public class PedidoService {
     private final PedidosRepository pedidosRepository;
     private final DetallePedidosRepository detallePedidosRepository;
     private final EmailNotificationService emailNotificationService;
+    private final CuponService cuponService;
+    private final UsuarioRepository usuarioRepository;
+    private final ProductoRepository productoRepository;
 
-    public Pedido confirmarPedido(Long usuarioId) {
+    public Pedido confirmarPedido(Long usuarioId, String cuponCodigo) {
 
         CarritoEntity carrito = carritoRepository
                 .findByUsuario_Id(usuarioId)
@@ -49,18 +58,39 @@ public class PedidoService {
             throw new RuntimeException("El carrito está vacío");
         }
 
-        BigDecimal total = items.stream()
+        BigDecimal subtotal = items.stream()
                 .map(item -> item.getProducto().getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal descuento = BigDecimal.ZERO;
+        String cuponAplicado = null;
+
+        if (cuponCodigo != null && !cuponCodigo.trim().isEmpty()) {
+            var validation = cuponService.validarYCalcularDescuento(cuponCodigo, usuarioId);
+            if (!validation.getValido()) {
+                throw new RuntimeException("Cupón inválido: " + validation.getMensajeError());
+            }
+            descuento = validation.getDescuentoAplicado();
+            cuponAplicado = validation.getCodigo();
+        }
+
+        BigDecimal total = subtotal.subtract(descuento);
 
         Pedido pedido = new Pedido();
 
         pedido.setUsuario(carrito.getUsuario());
         pedido.setEstado("PENDIENTE");
         pedido.setFecha(LocalDateTime.now());
+        pedido.setSubtotal(subtotal);
+        pedido.setDescuento(descuento);
+        pedido.setCuponCodigo(cuponAplicado);
         pedido.setTotal(total);
 
         Pedido pedidoGuardado = pedidosRepository.save(pedido);
+
+        if (cuponAplicado != null) {
+            cuponService.registrarUso(cuponAplicado);
+        }
 
         List<PedidosDetalles> detalles = items.stream()
                 .map(item -> {
@@ -205,5 +235,61 @@ public class PedidoService {
         } catch (Exception e) {
             System.err.println("Error al enviar notificación de estado para pedido " + pedido.getId() + ": " + e.getMessage());
         }
+    }
+
+    public Pedido comprarDirecto(Long usuarioId, CompraDirectaRequest request) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        Producto producto = productoRepository.findById(request.getProductoId())
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        if (producto.getActivo() != null && !producto.getActivo()) {
+            throw new RuntimeException("El producto no está activo");
+        }
+
+        BigDecimal subtotal = producto.getPrecio().multiply(BigDecimal.valueOf(request.getCantidad()));
+        BigDecimal descuento = BigDecimal.ZERO;
+        String cuponAplicado = null;
+
+        if (request.getCuponCodigo() != null && !request.getCuponCodigo().trim().isEmpty()) {
+            var validation = cuponService.validarYCalcularDescuento(request.getCuponCodigo(), usuarioId, subtotal);
+            if (!validation.getValido()) {
+                throw new RuntimeException("Cupón inválido: " + validation.getMensajeError());
+            }
+            descuento = validation.getDescuentoAplicado();
+            cuponAplicado = validation.getCodigo();
+        }
+
+        BigDecimal total = subtotal.subtract(descuento);
+
+        Pedido pedido = new Pedido();
+        pedido.setUsuario(usuario);
+        pedido.setEstado("PENDIENTE");
+        pedido.setFecha(LocalDateTime.now());
+        pedido.setSubtotal(subtotal);
+        pedido.setDescuento(descuento);
+        pedido.setCuponCodigo(cuponAplicado);
+        pedido.setTotal(total);
+        pedido.setDireccionEnvio(request.getDireccionEnvio());
+
+        Pedido pedidoGuardado = pedidosRepository.save(pedido);
+
+        if (cuponAplicado != null) {
+            cuponService.registrarUso(cuponAplicado);
+        }
+
+        PedidosDetalles detalle = new PedidosDetalles();
+        detalle.setPedido(pedidoGuardado);
+        detalle.setProducto(producto);
+        detalle.setCantidad(request.getCantidad());
+
+        detallePedidosRepository.save(detalle);
+
+        pedidoGuardado.setDetalles(List.of(detalle));
+
+        enviarNotificacionConfirmacion(pedidoGuardado);
+
+        return pedidoGuardado;
     }
 }

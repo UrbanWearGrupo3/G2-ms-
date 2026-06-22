@@ -1,6 +1,7 @@
 package com.grupo3.tienda_ropa.Pedidos.service;
 
 import com.grupo3.tienda_ropa.Pedidos.entity.Pedido;
+import com.grupo3.tienda_ropa.Pedidos.entity.PedidosDetalles;
 import com.grupo3.tienda_ropa.Pedidos.repository.DetallePedidosRepository;
 import com.grupo3.tienda_ropa.Pedidos.repository.PedidosRepository;
 import com.grupo3.tienda_ropa.carrito.entitys.CarritoEntity;
@@ -44,6 +45,15 @@ class PedidoServiceTest {
     @Mock
     private EmailNotificationService emailNotificationService;
 
+    @Mock
+    private com.grupo3.tienda_ropa.cupon.service.CuponService cuponService;
+
+    @Mock
+    private com.grupo3.tienda_ropa.usuario.repository.UsuarioRepository usuarioRepository;
+
+    @Mock
+    private com.grupo3.tienda_ropa.producto.repository.ProductoRepository productoRepository;
+
     private PedidoService pedidoService;
 
     @BeforeEach
@@ -53,7 +63,10 @@ class PedidoServiceTest {
                 carritoItemRepo,
                 pedidosRepository,
                 detallePedidosRepository,
-                emailNotificationService
+                emailNotificationService,
+                cuponService,
+                usuarioRepository,
+                productoRepository
         );
     }
 
@@ -92,7 +105,7 @@ class PedidoServiceTest {
         when(pedidosRepository.save(any(Pedido.class))).thenReturn(mockPedidoGuardado);
 
         // Act
-        Pedido result = pedidoService.confirmarPedido(usuarioId);
+        Pedido result = pedidoService.confirmarPedido(usuarioId, null);
 
         // Assert
         assertNotNull(result);
@@ -119,7 +132,7 @@ class PedidoServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> 
-            pedidoService.confirmarPedido(usuarioId)
+            pedidoService.confirmarPedido(usuarioId, null)
         );
         assertEquals("El carrito está vacío", exception.getMessage());
         
@@ -155,5 +168,77 @@ class PedidoServiceTest {
         verify(pedidosRepository, times(1)).findById(pedidoId);
         verify(pedidosRepository, times(1)).save(pedido);
         verify(emailNotificationService, times(1)).sendEmail(any(NotificationRequest.class));
+    }
+
+    @Test
+    void testComprarDirecto_Success_NoCoupon() {
+        // Arrange
+        Long usuarioId = 1L;
+        Usuario usuario = new Usuario();
+        usuario.setId(usuarioId);
+        usuario.setNombre("Gerardo");
+        usuario.setApellido("Vega");
+        usuario.setEmail("gerardo@tienda.com");
+
+        Producto producto = new Producto();
+        producto.setId(100L);
+        producto.setNombre("Remera Urban");
+        producto.setPrecio(BigDecimal.valueOf(1500));
+        producto.setActivo(true);
+
+        com.grupo3.tienda_ropa.Pedidos.deto.CompraDirectaRequest request = new com.grupo3.tienda_ropa.Pedidos.deto.CompraDirectaRequest();
+        request.setProductoId(100L);
+        request.setCantidad(2);
+        request.setDireccionEnvio("Calle Falsa 123");
+
+        Pedido mockPedidoGuardado = new Pedido();
+        mockPedidoGuardado.setId(600L);
+        mockPedidoGuardado.setUsuario(usuario);
+        mockPedidoGuardado.setTotal(BigDecimal.valueOf(3000));
+
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
+        when(productoRepository.findById(100L)).thenReturn(Optional.of(producto));
+        when(pedidosRepository.save(any(Pedido.class))).thenReturn(mockPedidoGuardado);
+
+        // Act
+        Pedido result = pedidoService.comprarDirecto(usuarioId, request);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(600L, result.getId());
+        assertEquals(BigDecimal.valueOf(3000), result.getTotal());
+
+        verify(usuarioRepository, times(1)).findById(usuarioId);
+        verify(productoRepository, times(1)).findById(100L);
+        verify(pedidosRepository, times(1)).save(any(Pedido.class));
+        verify(detallePedidosRepository, times(1)).save(any(PedidosDetalles.class));
+        verify(emailNotificationService, times(1)).sendEmail(any(NotificationRequest.class));
+    }
+
+    @Test
+    void testComprarDirecto_ProductInactive_ThrowsException() {
+        // Arrange
+        Long usuarioId = 1L;
+        Usuario usuario = new Usuario();
+        usuario.setId(usuarioId);
+
+        Producto producto = new Producto();
+        producto.setId(100L);
+        producto.setActivo(false);
+
+        com.grupo3.tienda_ropa.Pedidos.deto.CompraDirectaRequest request = new com.grupo3.tienda_ropa.Pedidos.deto.CompraDirectaRequest();
+        request.setProductoId(100L);
+        request.setCantidad(2);
+
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
+        when(productoRepository.findById(100L)).thenReturn(Optional.of(producto));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+            pedidoService.comprarDirecto(usuarioId, request)
+        );
+        assertEquals("El producto no está activo", exception.getMessage());
+
+        verify(pedidosRepository, never()).save(any(Pedido.class));
     }
 }

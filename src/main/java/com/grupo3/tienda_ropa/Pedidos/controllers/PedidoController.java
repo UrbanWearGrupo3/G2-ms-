@@ -13,6 +13,8 @@ import com.grupo3.tienda_ropa.Pedidos.entity.Pedido;
 import com.grupo3.tienda_ropa.Pedidos.service.PedidoService;
 import com.grupo3.tienda_ropa.Pedidos.service.MercadoPagoService;
 import com.mercadopago.resources.preference.Preference;
+import com.grupo3.tienda_ropa.Pedidos.deto.CompraDirectaRequest;
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,14 +27,27 @@ public class PedidoController {
     private final MercadoPagoService mercadoPagoService;
 
     @PostMapping("/confirmar")
-    public ResponseEntity<Pedido> confirmarPedido() {
+    public ResponseEntity<Pedido> confirmarPedido(@RequestParam(required = false) String cuponCodigo) {
 
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
         Long usuarioId = Long.parseLong(authentication.getName());
 
-        Pedido pedido = pedidoService.confirmarPedido(usuarioId);
+        Pedido pedido = pedidoService.confirmarPedido(usuarioId, cuponCodigo);
+
+        return ResponseEntity.ok(pedido);
+    }
+
+    @PostMapping("/comprar-directo")
+    public ResponseEntity<Pedido> comprarDirecto(@Valid @RequestBody CompraDirectaRequest request) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        Long usuarioId = Long.parseLong(authentication.getName());
+
+        Pedido pedido = pedidoService.comprarDirecto(usuarioId, request);
 
         return ResponseEntity.ok(pedido);
     }

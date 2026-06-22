@@ -28,9 +28,15 @@ private LocalDateTime fecha;
 
 private String estado;
 
-private BigDecimal total;
+    private BigDecimal total;
 
-private String direccionEnvio;
+    private BigDecimal subtotal;
+
+    private BigDecimal descuento;
+
+    private String cuponCodigo;
+
+    private String direccionEnvio;
 
 @OneToMany(
         mappedBy = "pedido",

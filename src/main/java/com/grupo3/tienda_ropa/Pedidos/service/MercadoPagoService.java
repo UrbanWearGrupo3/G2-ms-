@@ -29,15 +29,27 @@ public class MercadoPagoService {
         try {
             PreferenceClient client = new PreferenceClient();
 
-            List<PreferenceItemRequest> items = pedido.getDetalles().stream()
-                    .map(detalle -> PreferenceItemRequest.builder()
-                            .id(detalle.getProducto().getId().toString())
-                            .title(detalle.getProducto().getNombre())
-                            .description(detalle.getProducto().getDescripcion())
-                            .quantity(detalle.getCantidad())
-                            .unitPrice(detalle.getProducto().getPrecio())
-                            .build())
-                    .collect(Collectors.toList());
+            List<PreferenceItemRequest> items;
+
+            if (pedido.getDescuento() != null && pedido.getDescuento().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                items = List.of(PreferenceItemRequest.builder()
+                        .id(pedido.getId().toString())
+                        .title("Pedido #" + pedido.getId() + " (Cupón aplicado)")
+                        .description("Compra en UrbanWear")
+                        .quantity(1)
+                        .unitPrice(pedido.getTotal())
+                        .build());
+            } else {
+                items = pedido.getDetalles().stream()
+                        .map(detalle -> PreferenceItemRequest.builder()
+                                .id(detalle.getProducto().getId().toString())
+                                .title(detalle.getProducto().getNombre())
+                                .description(detalle.getProducto().getDescripcion())
+                                .quantity(detalle.getCantidad())
+                                .unitPrice(detalle.getProducto().getPrecio())
+                                .build())
+                        .collect(Collectors.toList());
+            }
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
                     .success(successUrl)
