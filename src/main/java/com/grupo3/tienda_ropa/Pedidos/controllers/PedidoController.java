@@ -14,6 +14,7 @@ import com.grupo3.tienda_ropa.Pedidos.service.PedidoService;
 import com.grupo3.tienda_ropa.Pedidos.service.MercadoPagoService;
 import com.mercadopago.resources.preference.Preference;
 import com.grupo3.tienda_ropa.Pedidos.deto.CompraDirectaRequest;
+import com.grupo3.tienda_ropa.usuario.entity.Usuario;
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,8 @@ public class PedidoController {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        Long usuarioId = Long.parseLong(authentication.getName());
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        Long usuarioId = usuario.getId();
 
         Pedido pedido = pedidoService.confirmarPedido(usuarioId, cuponCodigo);
 
@@ -45,7 +47,8 @@ public class PedidoController {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        Long usuarioId = Long.parseLong(authentication.getName());
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        Long usuarioId = usuario.getId();
 
         Pedido pedido = pedidoService.comprarDirecto(usuarioId, request);
 
@@ -66,7 +69,8 @@ public class PedidoController {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        Long usuarioId = Long.parseLong(authentication.getName());
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        Long usuarioId = usuario.getId();
 
         return ResponseEntity.ok(
                 pedidoService.obtenerPedidosUsuario(usuarioId)
@@ -90,7 +94,8 @@ public class PedidoController {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        Long usuarioId = Long.parseLong(authentication.getName());
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        Long usuarioId = usuario.getId();
 
         return ResponseEntity.ok(
                 pedidoService.obtenerPedidosUsuarioPorEstado(

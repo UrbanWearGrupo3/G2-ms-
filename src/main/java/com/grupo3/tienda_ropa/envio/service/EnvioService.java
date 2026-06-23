@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.grupo3.tienda_ropa.usuario.entity.Usuario;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -151,5 +152,27 @@ public class EnvioService {
     private Pedido obtenerPedidoValido(Long pedidoId) {
         return pedidosRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + pedidoId));
+    }
+
+    public void validarAccesoPedido(Long pedidoId, Usuario usuarioLogueado, boolean isAdminOrSuper) {
+        if (isAdminOrSuper) {
+            return;
+        }
+        Pedido pedido = obtenerPedidoValido(pedidoId);
+        if (pedido.getUsuario() == null || !pedido.getUsuario().getId().equals(usuarioLogueado.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para acceder a este pedido");
+        }
+    }
+
+    public void validarAccesoEnvio(Long envioId, Usuario usuarioLogueado, boolean isAdminOrSuper) {
+        if (isAdminOrSuper) {
+            return;
+        }
+        Envio envio = envioRepository.findById(envioId)
+                .orElseThrow(() -> new RuntimeException("Envío no encontrado con ID: " + envioId));
+        if (envio.getPedido() == null || envio.getPedido().getUsuario() == null ||
+                !envio.getPedido().getUsuario().getId().equals(usuarioLogueado.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para acceder a este envío");
+        }
     }
 }

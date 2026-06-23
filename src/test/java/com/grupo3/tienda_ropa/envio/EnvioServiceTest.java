@@ -21,6 +21,8 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import com.grupo3.tienda_ropa.usuario.entity.Usuario;
+import org.springframework.security.access.AccessDeniedException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -179,5 +181,49 @@ class EnvioServiceTest {
         assertEquals("Estado OCA: Envío en tránsito local", trackingInfo);
         verify(envioRepository).findById(envioId);
         verify(shippingStrategy).consultarSeguimiento("OCA-12345", EnvioEstado.EN_TRANSITO);
+    }
+
+    @Test
+    void testValidarAccesoPedido_AdminAccess() {
+        // Arrange & Act & Assert
+        // Admin or Superuser should return immediately without checking database or throwing exception
+        assertDoesNotThrow(() -> envioService.validarAccesoPedido(1L, new Usuario(), true));
+    }
+
+    @Test
+    void testValidarAccesoPedido_OwnerAccess() {
+        // Arrange
+        Long pedidoId = 1L;
+        Usuario mockUser = new Usuario();
+        mockUser.setId(10L);
+
+        Pedido mockPedido = new Pedido();
+        mockPedido.setId(pedidoId);
+        mockPedido.setUsuario(mockUser);
+
+        when(pedidosRepository.findById(pedidoId)).thenReturn(Optional.of(mockPedido));
+
+        // Act & Assert
+        assertDoesNotThrow(() -> envioService.validarAccesoPedido(pedidoId, mockUser, false));
+    }
+
+    @Test
+    void testValidarAccesoPedido_AccessDenied() {
+        // Arrange
+        Long pedidoId = 1L;
+        Usuario owner = new Usuario();
+        owner.setId(10L);
+
+        Usuario otherUser = new Usuario();
+        otherUser.setId(20L);
+
+        Pedido mockPedido = new Pedido();
+        mockPedido.setId(pedidoId);
+        mockPedido.setUsuario(owner);
+
+        when(pedidosRepository.findById(pedidoId)).thenReturn(Optional.of(mockPedido));
+
+        // Act & Assert
+        assertThrows(AccessDeniedException.class, () -> envioService.validarAccesoPedido(pedidoId, otherUser, false));
     }
 }

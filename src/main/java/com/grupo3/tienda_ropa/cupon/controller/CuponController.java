@@ -5,6 +5,7 @@ import com.grupo3.tienda_ropa.cupon.dto.CuponRequestDto;
 import com.grupo3.tienda_ropa.cupon.dto.CuponResponseDto;
 import com.grupo3.tienda_ropa.cupon.dto.ValidarCuponRequestDto;
 import com.grupo3.tienda_ropa.cupon.service.CuponService;
+import com.grupo3.tienda_ropa.usuario.entity.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -57,7 +58,8 @@ public class CuponController {
     @PostMapping("/validar")
     public ResponseEntity<CuponDescuentoDto> validarCupon(@Valid @RequestBody ValidarCuponRequestDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long usuarioId = Long.parseLong(authentication.getName());
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        Long usuarioId = usuario.getId();
 
         CuponDescuentoDto response = cuponService.validarYCalcularDescuento(dto.getCodigo(), usuarioId);
         return ResponseEntity.ok(response);

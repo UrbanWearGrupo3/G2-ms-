@@ -18,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -47,6 +49,17 @@ public class ProductoService {
     // --- PRODUCT LOGIC ---
     // --- GUARDAR PRODUCTOS---
     public ProductoResponse save(ProductoRequest request) {
+        if (request.getVariantes() != null) {
+            long uniqueCount = request.getVariantes().stream()
+                    .map(v -> v.getTalle().trim().toLowerCase() + "-" + v.getColorId())
+                    .distinct()
+                    .count();
+            if (uniqueCount < request.getVariantes().size()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "La lista de variantes contiene combinaciones de talle y color duplicadas.");
+            }
+        }
+
         Categoria categoria = categoriaRepository.findById(request.getCategoriaId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
                         "Categoría no encontrada con id: " + request.getCategoriaId()));
@@ -91,6 +104,17 @@ public class ProductoService {
 
     // --- UPDATE PRODUCTOS ---
     public ProductoResponse update(Long id, ProductoRequest request) {
+        if (request.getVariantes() != null) {
+            long uniqueCount = request.getVariantes().stream()
+                    .map(v -> v.getTalle().trim().toLowerCase() + "-" + v.getColorId())
+                    .distinct()
+                    .count();
+            if (uniqueCount < request.getVariantes().size()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "La lista de variantes contiene combinaciones de talle y color duplicadas.");
+            }
+        }
+
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Producto no encontrado con id: " + id));
@@ -112,10 +136,53 @@ public class ProductoService {
         producto.setImagenUrl(request.getImagenUrl());
         producto.setCategoria(categoria);
 
+        // Synchronize variants
+        if (request.getVariantes() != null) {
+            Map<String, Variante> existingVariants = producto.getVariantes().stream()
+                    .collect(Collectors.toMap(
+                            v -> (v.getTalle().toLowerCase() + "-" + v.getColor().getId()),
+                            v -> v,
+                            (v1, v2) -> v1 // Handle any duplicates gracefully
+                    ));
 
+            List<Variante> updatedVariants = new ArrayList<>();
+
+            for (VarianteRequest vr : request.getVariantes()) {
+                String key = vr.getTalle().toLowerCase() + "-" + vr.getColorId();
+
+                if (existingVariants.containsKey(key)) {
+                    Variante existing = existingVariants.get(key);
+                    existing.setStock(vr.getStock());
+                    updatedVariants.add(existing);
+                } else {
+                    Variante nueva = new Variante();
+                    nueva.setTalle(vr.getTalle());
+                    nueva.setStock(vr.getStock());
+                    nueva.setProducto(producto);
+
+                    Color color = colorRepository.findById(vr.getColorId())
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                    "Color no encontrado con id: " + vr.getColorId()));
+                    nueva.setColor(color);
+
+                    String barcode = vr.getCodigoBarras();
+                    if (barcode == null || barcode.trim().isEmpty()) {
+                        barcode = generateUniqueBarcode();
+                    } else {
+                        validateUniqueBarcode(barcode);
+                    }
+                    nueva.setCodigoBarras(barcode);
+                    updatedVariants.add(nueva);
+                }
+            }
+
+            producto.getVariantes().clear();
+            producto.getVariantes().addAll(updatedVariants);
+        }
 
         Producto saved = productoRepository.save(producto);
         return mapToProductoResponse(saved);
+
     }
 
     /// --- GET FIND BY ID---

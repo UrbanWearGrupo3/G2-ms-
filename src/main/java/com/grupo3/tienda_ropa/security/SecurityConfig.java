@@ -66,6 +66,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/cupones/**").hasAnyRole("ADMIN", "SUPER_USER")
                         // Rutas exclusivas para Superusuario
                         .requestMatchers("/api/super-user/**").hasRole("SUPER_USER")
+                        // Envios: Modificar estado de envíos es solo para administradores
+                        .requestMatchers(HttpMethod.PUT, "/api/envios/**").hasAnyRole("ADMIN", "SUPER_USER")
+                        .requestMatchers("/api/envios/**").authenticated()
                         // Cualquier otra petición requiere login básico
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
