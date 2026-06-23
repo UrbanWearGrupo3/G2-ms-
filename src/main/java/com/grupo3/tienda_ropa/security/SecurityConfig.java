@@ -38,9 +38,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Rutas públicas de autenticación, base de datos h2 y redirecciones de Mercado
-                        // Pago
-                        .requestMatchers("/api/auth/**", "/h2-console/**", "/api/internal/**", "/api/pedidos/pago/**")
+                        // Rutas públicas de autenticación, base de datos h2, redirecciones de Mercado Pago y errores
+                        .requestMatchers("/api/auth/**", "/h2-console/**", "/api/internal/**", "/api/pedidos/pago/**", "/error")
                         .permitAll()
                         // El catálogo de ropa es público para lectura
                         .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()

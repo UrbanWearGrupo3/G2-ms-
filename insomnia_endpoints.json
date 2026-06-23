@@ -1,0 +1,1419 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-06-23T12:35:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_urbanwear",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "UrbanWear API",
+      "description": "Colección completa de endpoints para la tienda de ropa UrbanWear Grupo 3, incluyendo flujos de autenticación, productos, carrito, pedidos, Mercado Pago, envíos y utilidades de backup.",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_urbanwear_base",
+      "_type": "environment",
+      "parentId": "wrk_urbanwear",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080",
+        "token": "REPLACE_WITH_YOUR_JWT_TOKEN",
+        "internal_token": "urbanwear-secret-token-2026"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url",
+          "token",
+          "internal_token"
+        ]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1719120000000
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "1. Autenticación",
+      "description": "Endpoints públicos para registro de nuevos usuarios y login de usuarios existentes.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000001
+    },
+    {
+      "_id": "fld_users",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "2. Usuarios",
+      "description": "Gestión de perfiles de usuario. Requiere autenticación. Ciertas acciones requieren rol ADMIN.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000002
+    },
+    {
+      "_id": "fld_products",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "3. Productos & Variantes",
+      "description": "Catálogo de productos y variantes. La consulta es pública, mientras que la modificación (CRUD) requiere rol ADMIN.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000003
+    },
+    {
+      "_id": "fld_categories",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "4. Categorías",
+      "description": "Gestión de categorías para clasificación de productos. Consulta pública, modificaciones requieren rol ADMIN.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000004
+    },
+    {
+      "_id": "fld_colors",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "5. Colores",
+      "description": "Gestión del catálogo de colores asociados a las variantes de productos. Consulta pública, modificaciones requieren rol ADMIN.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000005
+    },
+    {
+      "_id": "fld_coupons",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "6. Cupones",
+      "description": "Gestión de cupones de descuento (porcentaje o valor fijo). Creación/actualización requiere rol ADMIN. Validación disponible para cualquier usuario autenticado.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000006
+    },
+    {
+      "_id": "fld_cart",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "7. Carrito de Compras",
+      "description": "Gestión del carrito persistente del usuario autenticado (agregar items, modificar cantidades, vaciar y ver items).",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000007
+    },
+    {
+      "_id": "fld_orders",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "8. Pedidos & Mercado Pago",
+      "description": "Creación de pedidos (desde carrito o compra directa), consulta de pedidos personales, actualización de estado (ADMIN) e integración con la API de Mercado Pago para pagos.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000008
+    },
+    {
+      "_id": "fld_shipping",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "9. Envíos & Seguimiento",
+      "description": "Cotización de envío con proveedores (Andreani, Correo Argentino, etc.), creación de envíos y consulta de tracking de entrega.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000009
+    },
+    {
+      "_id": "fld_internal",
+      "_type": "request_group",
+      "parentId": "wrk_urbanwear",
+      "name": "10. Interno & Backups",
+      "description": "Endpoints internos protegidos por token compartido para reportes de backups de base de datos.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1719120000010
+    },
+    {
+      "_id": "req_auth_register",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Registrar Nuevo Usuario",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"email\": \"juan.perez@example.com\",\n  \"password\": \"password123\",\n  \"adminPasscode\": \"\" \n}"
+      },
+      "authentication": {},
+      "metaSortKey": -1719120000100
+    },
+    {
+      "_id": "req_auth_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Iniciar Sesión (Login)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"juan.perez@example.com\",\n  \"password\": \"password123\"\n}"
+      },
+      "authentication": {},
+      "metaSortKey": -1719120000099
+    },
+    {
+      "_id": "req_users_me_get",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Obtener mi Perfil",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/usuarios/me",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000098
+    },
+    {
+      "_id": "req_users_me_put",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Actualizar mi Perfil",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/usuarios/me",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Juan Carlos\",\n  \"apellido\": \"Pérez Modificado\",\n  \"password\": \"nuevapassword123\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000097
+    },
+    {
+      "_id": "req_users_list",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Listar todos los Usuarios (Admin)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/usuarios",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "page",
+          "value": "0"
+        },
+        {
+          "name": "size",
+          "value": "10"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000096
+    },
+    {
+      "_id": "req_users_role_patch",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Actualizar Rol de Usuario (Admin)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/usuarios/{id}/rol",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "rol",
+          "value": "ADMIN"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000095
+    },
+    {
+      "_id": "req_users_delete",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Eliminar/Desactivar Usuario (Admin)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/usuarios/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000094
+    },
+    {
+      "_id": "req_products_list",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Listar y Filtrar Productos (Público)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/productos",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "categoriaId",
+          "value": ""
+        },
+        {
+          "name": "talle",
+          "value": ""
+        },
+        {
+          "name": "color",
+          "value": ""
+        },
+        {
+          "name": "precioMin",
+          "value": ""
+        },
+        {
+          "name": "precioMax",
+          "value": ""
+        },
+        {
+          "name": "nombre",
+          "value": ""
+        },
+        {
+          "name": "activo",
+          "value": "true"
+        },
+        {
+          "name": "page",
+          "value": "0"
+        },
+        {
+          "name": "size",
+          "value": "12"
+        }
+      ],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000093
+    },
+    {
+      "_id": "req_products_get",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Obtener Producto por ID (Público)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/productos/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000092
+    },
+    {
+      "_id": "req_products_create",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Crear Producto con Variantes (Admin)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/productos",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Remera Classic Urban\",\n  \"descripcion\": \"Remera de algodón premium con logo estampado\",\n  \"precio\": 19.99,\n  \"imagenUrl\": \"https://supabase.co/storage/v1/object/public/images/remera_classic.jpg\",\n  \"categoriaId\": 1,\n  \"variantes\": [\n    {\n      \"talle\": \"M\",\n      \"colorId\": 1,\n      \"stock\": 50,\n      \"codigoBarras\": \"7791234567890\"\n    },\n    {\n      \"talle\": \"L\",\n      \"colorId\": 1,\n      \"stock\": 35,\n      \"codigoBarras\": \"7791234567891\"\n    }\n  ]\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000091
+    },
+    {
+      "_id": "req_products_update",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Actualizar Producto (Admin)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/productos/{id}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Remera Classic Urban Editada\",\n  \"descripcion\": \"Remera de algodón premium con nuevo diseño\",\n  \"precio\": 22.50,\n  \"imagenUrl\": \"https://supabase.co/storage/v1/object/public/images/remera_classic.jpg\",\n  \"categoriaId\": 1\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000090
+    },
+    {
+      "_id": "req_products_delete",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Eliminar Producto (Admin)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/productos/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000089
+    },
+    {
+      "_id": "req_products_toggle_active",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Cambiar Estado Activo Producto (Admin)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/productos/{id}/activo",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "activo",
+          "value": "true"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000088
+    },
+    {
+      "_id": "req_products_add_variant",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Agregar Variante a Producto (Admin)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/productos/{id}/variantes",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"talle\": \"XL\",\n  \"colorId\": 2,\n  \"stock\": 15,\n  \"codigoBarras\": \"7791234567892\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000087
+    },
+    {
+      "_id": "req_products_update_stock",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Actualizar Stock de Variante (Admin)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/productos/variantes/{varianteId}/stock",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "stock",
+          "value": "100"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000086
+    },
+    {
+      "_id": "req_products_upload_image",
+      "_type": "request",
+      "parentId": "fld_products",
+      "name": "Subir Imagen de Producto (Admin)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/productos/upload",
+      "headers": [],
+      "parameters": [],
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "name": "file",
+            "type": "file",
+            "value": ""
+          }
+        ]
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000085
+    },
+    {
+      "_id": "req_categories_list",
+      "_type": "request",
+      "parentId": "fld_categories",
+      "name": "Listar Categorías (Público)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/categorias",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "soloActivas",
+          "value": "false"
+        }
+      ],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000084
+    },
+    {
+      "_id": "req_categories_get",
+      "_type": "request",
+      "parentId": "fld_categories",
+      "name": "Obtener Categoría por ID (Público)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/categorias/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000083
+    },
+    {
+      "_id": "req_categories_create",
+      "_type": "request",
+      "parentId": "fld_categories",
+      "name": "Crear Categoría (Admin)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/categorias",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Abrigos\",\n  \"descripcion\": \"Buzos, camperas y abrigos pesados\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000082
+    },
+    {
+      "_id": "req_categories_update",
+      "_type": "request",
+      "parentId": "fld_categories",
+      "name": "Actualizar Categoría (Admin)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/categorias/{id}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Abrigos Premium\",\n  \"descripcion\": \"Buzos, camperas y chaquetas exclusivas\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000081
+    },
+    {
+      "_id": "req_categories_delete",
+      "_type": "request",
+      "parentId": "fld_categories",
+      "name": "Eliminar Categoría (Admin)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/categorias/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000080
+    },
+    {
+      "_id": "req_categories_toggle_active",
+      "_type": "request",
+      "parentId": "fld_categories",
+      "name": "Cambiar Estado Activo Categoría (Admin)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/categorias/{id}/activo",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "activo",
+          "value": "true"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000079
+    },
+    {
+      "_id": "req_colors_list",
+      "_type": "request",
+      "parentId": "fld_colors",
+      "name": "Listar Colores (Público)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/colores",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "soloActivos",
+          "value": "false"
+        }
+      ],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000078
+    },
+    {
+      "_id": "req_colors_get",
+      "_type": "request",
+      "parentId": "fld_colors",
+      "name": "Obtener Color por ID (Público)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/colores/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000077
+    },
+    {
+      "_id": "req_colors_create",
+      "_type": "request",
+      "parentId": "fld_colors",
+      "name": "Crear Color (Admin)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/colores",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Azul Marino\",\n  \"codigoHex\": \"#000080\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000076
+    },
+    {
+      "_id": "req_colors_update",
+      "_type": "request",
+      "parentId": "fld_colors",
+      "name": "Actualizar Color (Admin)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/colores/{id}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Azul Francia\",\n  \"codigoHex\": \"#318CE7\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000075
+    },
+    {
+      "_id": "req_colors_delete",
+      "_type": "request",
+      "parentId": "fld_colors",
+      "name": "Eliminar Color (Admin)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/colores/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000074
+    },
+    {
+      "_id": "req_colors_toggle_active",
+      "_type": "request",
+      "parentId": "fld_colors",
+      "name": "Cambiar Estado Activo Color (Admin)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/colores/{id}/activo",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "activo",
+          "value": "true"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000073
+    },
+    {
+      "_id": "req_coupons_create",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Crear Cupón (Admin)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/cupones",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigo\": \"VERANO2026\",\n  \"tipoDescuento\": \"PORCENTAJE\",\n  \"valor\": 15.00,\n  \"fechaExpiracion\": \"2026-12-31T23:59:59\",\n  \"montoMinimo\": 50.00,\n  \"activo\": true,\n  \"limiteUso\": 200,\n  \"permiteMultiplesUsosPorCliente\": false\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000072
+    },
+    {
+      "_id": "req_coupons_list",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Listar todos los Cupones (Admin)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cupones",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000071
+    },
+    {
+      "_id": "req_coupons_get",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Obtener Cupón por ID (Admin)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cupones/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000070
+    },
+    {
+      "_id": "req_coupons_update",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Actualizar Cupón (Admin)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/cupones/{id}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigo\": \"VERANO2026_MOD\",\n  \"tipoDescuento\": \"FIJO\",\n  \"valor\": 500.00,\n  \"fechaExpiracion\": \"2026-12-31T23:59:59\",\n  \"montoMinimo\": 2000.00,\n  \"activo\": true,\n  \"limiteUso\": 100,\n  \"permiteMultiplesUsosPorCliente\": true\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000069
+    },
+    {
+      "_id": "req_coupons_delete",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Eliminar Cupón (Admin)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/cupones/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000068
+    },
+    {
+      "_id": "req_coupons_validate",
+      "_type": "request",
+      "parentId": "fld_coupons",
+      "name": "Validar Cupón y Calcular Descuento",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/cupones/validar",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"codigo\": \"VERANO2026\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000067
+    },
+    {
+      "_id": "req_cart_get_create",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Crear o Obtener Carrito",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/carrito",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000066
+    },
+    {
+      "_id": "req_cart_get",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Obtener Carrito Actual",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/carrito",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000065
+    },
+    {
+      "_id": "req_cart_add_item",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Agregar Producto a Carrito",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"productoId\": 1,\n  \"cantidad\": 2\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000064
+    },
+    {
+      "_id": "req_cart_list_items",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Listar Items en Carrito",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000063
+    },
+    {
+      "_id": "req_cart_get_item",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Obtener un Item del Carrito",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items/{productoId}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000062
+    },
+    {
+      "_id": "req_cart_decrease_item",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Disminuir Cantidad de un Item",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items/{productoId}/disminuir",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000061
+    },
+    {
+      "_id": "req_cart_update_item",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Actualizar Cantidad de un Item",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items/{productoId}",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "cantidad",
+          "value": "5"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000060
+    },
+    {
+      "_id": "req_cart_remove_item",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Eliminar Item del Carrito",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items/{productoId}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000059
+    },
+    {
+      "_id": "req_cart_clear",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Vaciar Carrito",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000058
+    },
+    {
+      "_id": "req_cart_count",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Obtener Cantidad Total de Productos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items/count",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000057
+    },
+    {
+      "_id": "req_cart_exists",
+      "_type": "request",
+      "parentId": "fld_cart",
+      "name": "Comprobar si Existe Producto en Carrito",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/carritos/{carritoId}/items/{productoId}/exists",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000056
+    },
+    {
+      "_id": "req_orders_confirm",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Confirmar Pedido desde Carrito",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/pedidos/confirmar",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "cuponCodigo",
+          "value": ""
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000055
+    },
+    {
+      "_id": "req_orders_direct",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Comprar Directamente (Compra Rápida)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/pedidos/comprar-directo",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"productoId\": 1,\n  \"cantidad\": 2,\n  \"cuponCodigo\": \"\",\n  \"direccionEnvio\": \"Av. Santa Fe 1234, CABA\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000054
+    },
+    {
+      "_id": "req_orders_list",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Listar todos los Pedidos (Admin)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000053
+    },
+    {
+      "_id": "req_orders_my",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Obtener mis Pedidos (Mis Compras)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos/mis-pedidos",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000052
+    },
+    {
+      "_id": "req_orders_by_state",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Obtener Pedidos por Estado (Admin)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos/estado/{estado}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000051
+    },
+    {
+      "_id": "req_orders_my_by_state",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Obtener mis Pedidos por Estado",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos/mis-pedidos/estado/{estado}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000050
+    },
+    {
+      "_id": "req_orders_update_state",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Actualizar Estado del Pedido (Admin)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/pedidos/{id}/estado",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "estado",
+          "value": "ENTREGADO"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000049
+    },
+    {
+      "_id": "req_orders_pay",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Generar Preferencia de Pago (Mercado Pago)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/pedidos/{id}/pagar",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000048
+    },
+    {
+      "_id": "req_orders_pay_success",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Callback Pago Exitoso (MP Redirect)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos/pago/success",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "payment_id",
+          "value": "123456789"
+        },
+        {
+          "name": "status",
+          "value": "approved"
+        },
+        {
+          "name": "external_reference",
+          "value": "1"
+        }
+      ],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000047
+    },
+    {
+      "_id": "req_orders_pay_pending",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Callback Pago Pendiente (MP Redirect)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos/pago/pending",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "payment_id",
+          "value": "123456789"
+        },
+        {
+          "name": "status",
+          "value": "pending"
+        },
+        {
+          "name": "external_reference",
+          "value": "1"
+        }
+      ],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000046
+    },
+    {
+      "_id": "req_orders_pay_failure",
+      "_type": "request",
+      "parentId": "fld_orders",
+      "name": "Callback Pago Fallido (MP Redirect)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/pedidos/pago/failure",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "external_reference",
+          "value": "1"
+        }
+      ],
+      "body": {},
+      "authentication": {},
+      "metaSortKey": -1719120000045
+    },
+    {
+      "_id": "req_shipping_providers",
+      "_type": "request",
+      "parentId": "fld_shipping",
+      "name": "Obtener Proveedores de Envío Soportados",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/envios/proveedores",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000044
+    },
+    {
+      "_id": "req_shipping_quote",
+      "_type": "request",
+      "parentId": "fld_shipping",
+      "name": "Cotizar Envío para Pedido",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/envios/cotizar",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "pedidoId",
+          "value": "1"
+        },
+        {
+          "name": "proveedor",
+          "value": "ANDREANI"
+        },
+        {
+          "name": "direccionDestino",
+          "value": "Av. Corrientes 4000, CABA"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000043
+    },
+    {
+      "_id": "req_shipping_create",
+      "_type": "request",
+      "parentId": "fld_shipping",
+      "name": "Crear Orden de Envío",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/envios",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"pedidoId\": 1,\n  \"proveedor\": \"ANDREANI\",\n  \"direccionDestino\": \"Av. Corrientes 4000, CABA\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000042
+    },
+    {
+      "_id": "req_shipping_get",
+      "_type": "request",
+      "parentId": "fld_shipping",
+      "name": "Obtener Envío por ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/envios/{id}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000041
+    },
+    {
+      "_id": "req_shipping_get_by_order",
+      "_type": "request",
+      "parentId": "fld_shipping",
+      "name": "Obtener Envío por ID de Pedido",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/envios/pedido/{pedidoId}",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000040
+    },
+    {
+      "_id": "req_shipping_update_state",
+      "_type": "request",
+      "parentId": "fld_shipping",
+      "name": "Actualizar Estado de Envío (Admin)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/envios/{id}/estado",
+      "headers": [],
+      "parameters": [
+        {
+          "name": "nuevoEstado",
+          "value": "EN_TRANSITO"
+        }
+      ],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000039
+    },
+    {
+      "_id": "req_shipping_tracking",
+      "_type": "request",
+      "parentId": "fld_shipping",
+      "name": "Consultar Tracking del Proveedor",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/envios/{id}/tracking",
+      "headers": [],
+      "parameters": [],
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": -1719120000038
+    },
+    {
+      "_id": "req_internal_backup_report",
+      "_type": "request",
+      "parentId": "fld_internal",
+      "name": "Reportar Backup de Base de Datos",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/internal/backups/report",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.internal_token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"FAILED\",\n  \"filename\": \"urbanwear_backup_2026-06-23.sql\",\n  \"error\": \"Error de conexión a PostgreSQL en Supabase\"\n}"
+      },
+      "authentication": {},
+      "metaSortKey": -1719120000037
+    }
+  ]
+}
