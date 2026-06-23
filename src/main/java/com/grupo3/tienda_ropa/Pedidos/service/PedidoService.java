@@ -44,8 +44,26 @@ public class PedidoService {
     private final UsuarioRepository usuarioRepository;
     private final ProductoRepository productoRepository;
 
-    public Pedido confirmarPedido(Long usuarioId, String cuponCodigo) {
+    // ==================== MÉTODO PARA OBTENER ID DE USUARIO POR EMAIL ====================
+    
+    public Long obtenerUsuarioIdPorEmail(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+        return usuario.getId();
+    }
 
+    public Usuario obtenerUsuarioPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+    }
+
+    // ==================== MÉTODOS DE CONFIRMACIÓN DE PEDIDO ====================
+
+    public Pedido confirmarPedido(Long usuarioId) {
+        return confirmarPedido(usuarioId, (String) null);
+    }
+
+    public Pedido confirmarPedido(Long usuarioId, String cuponCodigo) {
         CarritoEntity carrito = carritoRepository
                 .findByUsuario_Id(usuarioId)
                 .orElseThrow(() ->
@@ -81,9 +99,10 @@ public class PedidoService {
         pedido.setUsuario(carrito.getUsuario());
         pedido.setEstado("PENDIENTE");
         pedido.setFecha(LocalDateTime.now());
-        pedido.setSubtotal(subtotal);
-        pedido.setDescuento(descuento);
-        pedido.setCuponCodigo(cuponAplicado);
+        // Si tu entidad NO tiene estos campos, coméntalos o elimínalos
+        // pedido.setSubtotal(subtotal);  // Comentar si no existe
+        // pedido.setDescuento(descuento); // Comentar si no existe
+        // pedido.setCuponCodigo(cuponAplicado); // Comentar si no existe
         pedido.setTotal(total);
 
         Pedido pedidoGuardado = pedidosRepository.save(pedido);
@@ -94,13 +113,10 @@ public class PedidoService {
 
         List<PedidosDetalles> detalles = items.stream()
                 .map(item -> {
-
                     PedidosDetalles detalle = new PedidosDetalles();
-
                     detalle.setPedido(pedidoGuardado);
                     detalle.setProducto(item.getProducto());
                     detalle.setCantidad(item.getCantidad());
-
                     return detalle;
                 })
                 .toList();
@@ -116,6 +132,83 @@ public class PedidoService {
         return pedidoGuardado;
     }
 
+    public Pedido confirmarPedidoPorEmail(String email) {
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        return confirmarPedido(usuario.getId(), (String) null);
+    }
+
+    public Pedido confirmarPedidoPorEmail(String email, String cuponCodigo) {
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        return confirmarPedido(usuario.getId(), cuponCodigo);
+    }
+
+    // ==================== MÉTODO DE COMPRA DIRECTA ====================
+
+    public Pedido comprarDirecto(Long usuarioId, CompraDirectaRequest request) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        Producto producto = productoRepository.findById(request.getProductoId())
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        if (producto.getActivo() != null && !producto.getActivo()) {
+            throw new RuntimeException("El producto no está activo");
+        }
+
+        BigDecimal subtotal = producto.getPrecio().multiply(BigDecimal.valueOf(request.getCantidad()));
+        BigDecimal descuento = BigDecimal.ZERO;
+        String cuponAplicado = null;
+
+        if (request.getCuponCodigo() != null && !request.getCuponCodigo().trim().isEmpty()) {
+            var validation = cuponService.validarYCalcularDescuento(request.getCuponCodigo(), usuarioId, subtotal);
+            if (!validation.getValido()) {
+                throw new RuntimeException("Cupón inválido: " + validation.getMensajeError());
+            }
+            descuento = validation.getDescuentoAplicado();
+            cuponAplicado = validation.getCodigo();
+        }
+
+        BigDecimal total = subtotal.subtract(descuento);
+
+        Pedido pedido = new Pedido();
+        pedido.setUsuario(usuario);
+        pedido.setEstado("PENDIENTE");
+        pedido.setFecha(LocalDateTime.now());
+        // Si tu entidad NO tiene estos campos, coméntalos o elimínalos
+        // pedido.setSubtotal(subtotal);  // Comentar si no existe
+        // pedido.setDescuento(descuento); // Comentar si no existe
+        // pedido.setCuponCodigo(cuponAplicado); // Comentar si no existe
+        pedido.setTotal(total);
+        // pedido.setDireccionEnvio(request.getDireccionEnvio()); // Comentar si no existe
+
+        Pedido pedidoGuardado = pedidosRepository.save(pedido);
+
+        if (cuponAplicado != null) {
+            cuponService.registrarUso(cuponAplicado);
+        }
+
+        PedidosDetalles detalle = new PedidosDetalles();
+        detalle.setPedido(pedidoGuardado);
+        detalle.setProducto(producto);
+        detalle.setCantidad(request.getCantidad());
+
+        detallePedidosRepository.save(detalle);
+
+        pedidoGuardado.setDetalles(List.of(detalle));
+
+        enviarNotificacionConfirmacion(pedidoGuardado);
+
+        return pedidoGuardado;
+    }
+
+    public Pedido comprarDirecto(Long usuarioId, Long productoId, Integer cantidad) {
+        CompraDirectaRequest request = new CompraDirectaRequest();
+        request.setProductoId(productoId);
+        request.setCantidad(cantidad);
+        return comprarDirecto(usuarioId, request);
+    }
+
+    // ==================== MÉTODOS DE CONSULTA ====================
 
     public List<Pedido> obtenerPedidosUsuario(Long usuarioId) {
         return pedidosRepository.findByUsuarioId(usuarioId);
@@ -131,16 +224,19 @@ public class PedidoService {
     ) {
         return pedidosRepository.findByUsuarioIdAndEstado(usuarioId, estado);
     }
+
     public List<Pedido> obtenerTodosLosPedidos() {
         return pedidosRepository.findAll();
     }
+
     public Pedido obtenerPedidoPorId(Long pedidoId) {
         return pedidosRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
     }
 
-    public Pedido actualizarEstado(Long pedidoId, String nuevoEstado) {
+    // ==================== MÉTODOS DE ACTUALIZACIÓN ====================
 
+    public Pedido actualizarEstado(Long pedidoId, String nuevoEstado) {
         Pedido pedido = pedidosRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
@@ -152,6 +248,8 @@ public class PedidoService {
 
         return pedidoGuardado;
     }
+
+    // ==================== MÉTODOS DE NOTIFICACIÓN ====================
 
     private void enviarNotificacionConfirmacion(Pedido pedido) {
         try {
@@ -235,61 +333,5 @@ public class PedidoService {
         } catch (Exception e) {
             System.err.println("Error al enviar notificación de estado para pedido " + pedido.getId() + ": " + e.getMessage());
         }
-    }
-
-    public Pedido comprarDirecto(Long usuarioId, CompraDirectaRequest request) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        Producto producto = productoRepository.findById(request.getProductoId())
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
-
-        if (producto.getActivo() != null && !producto.getActivo()) {
-            throw new RuntimeException("El producto no está activo");
-        }
-
-        BigDecimal subtotal = producto.getPrecio().multiply(BigDecimal.valueOf(request.getCantidad()));
-        BigDecimal descuento = BigDecimal.ZERO;
-        String cuponAplicado = null;
-
-        if (request.getCuponCodigo() != null && !request.getCuponCodigo().trim().isEmpty()) {
-            var validation = cuponService.validarYCalcularDescuento(request.getCuponCodigo(), usuarioId, subtotal);
-            if (!validation.getValido()) {
-                throw new RuntimeException("Cupón inválido: " + validation.getMensajeError());
-            }
-            descuento = validation.getDescuentoAplicado();
-            cuponAplicado = validation.getCodigo();
-        }
-
-        BigDecimal total = subtotal.subtract(descuento);
-
-        Pedido pedido = new Pedido();
-        pedido.setUsuario(usuario);
-        pedido.setEstado("PENDIENTE");
-        pedido.setFecha(LocalDateTime.now());
-        pedido.setSubtotal(subtotal);
-        pedido.setDescuento(descuento);
-        pedido.setCuponCodigo(cuponAplicado);
-        pedido.setTotal(total);
-        pedido.setDireccionEnvio(request.getDireccionEnvio());
-
-        Pedido pedidoGuardado = pedidosRepository.save(pedido);
-
-        if (cuponAplicado != null) {
-            cuponService.registrarUso(cuponAplicado);
-        }
-
-        PedidosDetalles detalle = new PedidosDetalles();
-        detalle.setPedido(pedidoGuardado);
-        detalle.setProducto(producto);
-        detalle.setCantidad(request.getCantidad());
-
-        detallePedidosRepository.save(detalle);
-
-        pedidoGuardado.setDetalles(List.of(detalle));
-
-        enviarNotificacionConfirmacion(pedidoGuardado);
-
-        return pedidoGuardado;
     }
 }

@@ -1,48 +1,53 @@
 package com.grupo3.tienda_ropa.Pedidos.entity;
 
-import com.grupo3.tienda_ropa.usuario.entity.Usuario;
-
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.grupo3.tienda_ropa.usuario.entity.Usuario;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
 @Entity
 @Table(name = "pedidos")
-@Getter
-@Setter
+@Data
 public class Pedido {
 
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-@ManyToOne(fetch = FetchType.LAZY)
-@JoinColumn(name = "usuario_id", nullable = false)
-private Usuario usuario;
+    @ManyToOne
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
 
-private LocalDateTime fecha;
+    @Column(nullable = false)
+    private String estado;
 
-private String estado;
+    @Column(nullable = false)
+    private LocalDateTime fecha;
 
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
-    private BigDecimal subtotal;
+    @Column(name = "cupon_codigo")
+    private String cuponCodigo;
 
+    @Column(precision = 10, scale = 2)
     private BigDecimal descuento;
 
-    private String cuponCodigo;
+    @Column(name = "fecha_pago")
+    private LocalDateTime fechaPago;
+
+    @Column(name = "external_reference")
+    private String externalReference;
+
 
     private String direccionEnvio;
 
-@OneToMany(
-        mappedBy = "pedido",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true
-)
-private List<PedidosDetalles> detalles;
-//private List<Pago> pagos;
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("pedido") // ✅ Rompe el bucle
+    private List<PedidosDetalles> detalles;
 }
