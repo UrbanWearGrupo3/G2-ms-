@@ -25,9 +25,6 @@ public class Variante {
     private String talle;
 
     @Column(nullable = false)
-    private String color;
-
-    @Column(nullable = false)
     private Integer stock = 0;
 
     @Column(name = "codigo_barras")

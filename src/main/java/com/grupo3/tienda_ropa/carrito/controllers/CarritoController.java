@@ -13,29 +13,23 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class CarritoController {
 
-    private final CarritoService carritoService;
+        private final CarritoService carritoService;
 
-    @PostMapping
-    public ResponseEntity<CarritoEntity> crearOObtenerCarrito(
-            Principal principal) {
+        @PostMapping
+        public ResponseEntity<CarritoEntity> crearOObtenerCarrito(
+                        Principal principal) {
 
-        CarritoEntity carrito =
-                carritoService.obtenerOCrearCarritoPorEmail(
-                        principal.getName()
-                );
+                String email = principal.getName();
+                CarritoEntity carrito = carritoService.obtenerOCrearCarritoPorEmail(email);
+                return ResponseEntity.ok(carrito);
+        }
 
-        return ResponseEntity.ok(carrito);
-    }
+        @GetMapping
+        public ResponseEntity<CarritoEntity> obtenerCarrito(
+                        Principal principal) {
 
-    @GetMapping
-    public ResponseEntity<CarritoEntity> obtenerCarrito(
-            Principal principal) {
-
-        CarritoEntity carrito =
-                carritoService.obtenerOCrearCarritoPorEmail(
-                        principal.getName()
-                );
-
-        return ResponseEntity.ok(carrito);
-    }
+                String email = principal.getName();
+                CarritoEntity carrito = carritoService.obtenerCarritoPorEmail(email);
+                return ResponseEntity.ok(carrito);
+        }
 }

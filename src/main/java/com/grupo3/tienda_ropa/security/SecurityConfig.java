@@ -44,8 +44,14 @@ public class SecurityConfig {
                         .permitAll()
                         // El catálogo de ropa es público para lectura
                         .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()
+                        // Las reseñas son públicas para lectura, pero crear/editar/eliminar requiere
+                        // autenticación
+                        .requestMatchers(HttpMethod.GET, "/api/resenias/**").permitAll()
+                        .requestMatchers("/api/resenias/**").authenticated()
                         // Carga de imágenes de productos (solo administradores)
                         .requestMatchers(HttpMethod.POST, "/api/productos/upload").hasRole("ADMIN")
+                        // SOLO LOS ADMINS PUEDEN INGRESAR A TODOS LOS PEDIDOS
+                        .requestMatchers(HttpMethod.POST, "/api/pedidos").hasRole("ADMIN")
                         // Solo administradores pueden agregar/modificar productos y variantes
                         .requestMatchers("/api/productos/**").hasRole("ADMIN")
                         // Los usuarios autenticados pueden ver y actualizar su perfil

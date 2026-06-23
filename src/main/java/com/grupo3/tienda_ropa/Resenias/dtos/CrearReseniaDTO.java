@@ -4,7 +4,6 @@ package com.grupo3.tienda_ropa.Resenias.dtos;
 public class CrearReseniaDTO {
 
     private Long productoId;
-    private Long usuarioId;
     private String comentario;
     private Integer puntuacion;
 
@@ -17,14 +16,6 @@ public class CrearReseniaDTO {
 
     public void setProductoId(Long productoId) {
         this.productoId = productoId;
-    }
-
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
-
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
     }
 
     public String getComentario() {

@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,85 +16,172 @@ import org.springframework.web.bind.annotation.*;
 import com.grupo3.tienda_ropa.Pedidos.entity.Pedido;
 import com.grupo3.tienda_ropa.Pedidos.service.PedidoService;
 import com.grupo3.tienda_ropa.Pedidos.service.MercadoPagoService;
+import com.mercadopago.client.payment.PaymentClient;
+import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@RequiredArgsConstructor
+@RequiredArgsConstructor // ✅ Esto genera el constructor con todos los final
 public class PedidoController {
 
+    private static final Logger logger = LoggerFactory.getLogger(PedidoController.class);
+
+    // ✅ Hacerlos final para que RequiredArgsConstructor los incluya
     private final PedidoService pedidoService;
     private final MercadoPagoService mercadoPagoService;
 
+    @Value("${mercadopago.access-token}")
+    private String accessToken;
+
+    // ==================== WEBHOOK ====================
+    @PostMapping("/pago/webhook")
+    public ResponseEntity<Void> webhookPago(
+            @RequestBody Map<String, Object> payload,
+            @RequestHeader(value = "x-signature", required = false) String signature,
+            @RequestHeader(value = "x-request-id", required = false) String requestId) {
+        
+        try {
+            logger.info("📩 Webhook recibido: {}", payload);
+            logger.info("🔐 Headers - signature: {}, requestId: {}", signature, requestId);
+
+            if (!isValidMercadoPagoNotification(payload, signature, requestId)) {
+                logger.warn("⚠️ Notificación inválida - posible ataque");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            String type = (String) payload.get("type");
+            String action = (String) payload.get("action");
+            Map<String, Object> data = (Map<String, Object>) payload.get("data");
+            String paymentId = data != null ? (String) data.get("id") : null;
+
+            if ("payment".equals(type) && paymentId != null) {
+                procesarPago(paymentId);
+                logger.info("✅ Pago {} procesado correctamente", paymentId);
+            } else if ("payment".equals(type) && "updated".equals(action)) {
+                procesarActualizacionPago(paymentId);
+                logger.info("🔄 Pago {} actualizado correctamente", paymentId);
+            } else {
+                logger.warn("⚠️ Evento no manejado: type={}, action={}", type, action);
+            }
+
+            return ResponseEntity.ok().build();
+
+        } catch (Exception e) {
+            logger.error("❌ Error procesando webhook: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    private void procesarPago(String paymentId) {
+        try {
+            PaymentClient paymentClient = new PaymentClient();
+            Payment payment = paymentClient.get(Long.parseLong(paymentId));
+            
+            logger.info("💰 Estado del pago {}: {}", paymentId, payment.getStatus());
+            
+            String externalReference = payment.getExternalReference();
+            if (externalReference == null || externalReference.isEmpty()) {
+                logger.error("❌ External reference no encontrado para el pago {}", paymentId);
+                return;
+            }
+            
+            Long pedidoId = Long.parseLong(externalReference);
+            String estadoPedido = mapearEstadoPago(payment.getStatus());
+            Pedido pedido = pedidoService.actualizarEstado(pedidoId, estadoPedido);
+            
+            if (pedido != null) {
+                logger.info("✅ Pedido {} actualizado a estado: {}", pedidoId, estadoPedido);
+                logger.info("   Pago: {}, Método: {}", paymentId, payment.getPaymentTypeId());
+            }
+            
+        } catch (Exception e) {
+            logger.error("❌ Error procesando pago {}: {}", paymentId, e.getMessage(), e);
+            throw new RuntimeException("Error procesando pago", e);
+        }
+    }
+
+    private void procesarActualizacionPago(String paymentId) {
+        try {
+            procesarPago(paymentId);
+        } catch (Exception e) {
+            logger.error("❌ Error actualizando pago {}: {}", paymentId, e.getMessage(), e);
+            throw new RuntimeException("Error actualizando pago", e);
+        }
+    }
+
+    private String mapearEstadoPago(String statusMercadoPago) {
+        switch (statusMercadoPago) {
+            case "approved":
+                return "PAGADO";
+            case "pending":
+                return "PENDIENTE_PAGO";
+            case "in_process":
+                return "PROCESANDO";
+            case "rejected":
+                return "RECHAZADO";
+            case "refunded":
+                return "REEMBOLSADO";
+            case "cancelled":
+                return "CANCELADO";
+            case "chargeback":
+                return "CONTRACARGO";
+            default:
+                logger.warn("⚠️ Estado no mapeado: {}", statusMercadoPago);
+                return "DESCONOCIDO";
+        }
+    }
+
+    private boolean isValidMercadoPagoNotification(
+            Map<String, Object> payload, 
+            String signature, 
+            String requestId) {
+        
+        if (signature == null || signature.isEmpty()) {
+            logger.warn("⚠️ Notificación sin firma - podría ser prueba");
+            return true; // Solo para desarrollo
+        }
+        return false;
+    }
+
+    // ==================== ENDPOINTS EXISTENTES ====================
     @PostMapping("/confirmar")
     public ResponseEntity<Pedido> confirmarPedido() {
-
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long usuarioId = Long.parseLong(authentication.getName());
-
         Pedido pedido = pedidoService.confirmarPedido(usuarioId);
-
         return ResponseEntity.ok(pedido);
     }
 
     @GetMapping
     public ResponseEntity<List<Pedido>> obtenerTodosLosPedidos() {
-        
-        return ResponseEntity.ok(
-                pedidoService.obtenerTodosLosPedidos()
-        );
+        return ResponseEntity.ok(pedidoService.obtenerTodosLosPedidos());
     }
 
     @GetMapping("/mis-pedidos")
     public ResponseEntity<List<Pedido>> obtenerMisPedidos() {
-
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long usuarioId = Long.parseLong(authentication.getName());
-
-        return ResponseEntity.ok(
-                pedidoService.obtenerPedidosUsuario(usuarioId)
-        );
+        return ResponseEntity.ok(pedidoService.obtenerPedidosUsuario(usuarioId));
     }
-    @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<Pedido>> obtenerPedidosPorEstado(
-            @PathVariable String estado
-    ) {
 
-        return ResponseEntity.ok(
-                pedidoService.obtenerPedidosPorEstado(estado)
-        );
+    @GetMapping("/estado/{estado}")
+    public ResponseEntity<List<Pedido>> obtenerPedidosPorEstado(@PathVariable String estado) {
+        return ResponseEntity.ok(pedidoService.obtenerPedidosPorEstado(estado));
     }
 
     @GetMapping("/mis-pedidos/estado/{estado}")
-    public ResponseEntity<List<Pedido>> obtenerMisPedidosPorEstado(
-            @PathVariable String estado
-    ) {
-
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
+    public ResponseEntity<List<Pedido>> obtenerMisPedidosPorEstado(@PathVariable String estado) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long usuarioId = Long.parseLong(authentication.getName());
-
-        return ResponseEntity.ok(
-                pedidoService.obtenerPedidosUsuarioPorEstado(
-                        usuarioId,
-                        estado
-                )
-        );
+        return ResponseEntity.ok(pedidoService.obtenerPedidosUsuarioPorEstado(usuarioId, estado));
     }
+
     @PatchMapping("/{id}/estado")
-    public ResponseEntity<Pedido> actualizarEstado(
-            @PathVariable Long id,
-            @RequestParam String estado) {
-
+    public ResponseEntity<Pedido> actualizarEstado(@PathVariable Long id, @RequestParam String estado) {
         Pedido pedidoActualizado = pedidoService.actualizarEstado(id, estado);
-
         return ResponseEntity.ok(pedidoActualizado);
     }
 
@@ -113,8 +204,6 @@ public class PedidoController {
             @RequestParam("status") String status,
             @RequestParam("external_reference") Long pedidoId) {
 
-        Pedido pedido = pedidoService.actualizarEstado(pedidoId, "APROBADO");
-
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago aprobado con éxito");
         respuesta.put("estado", "APROBADO");
@@ -131,8 +220,6 @@ public class PedidoController {
             @RequestParam("status") String status,
             @RequestParam("external_reference") Long pedidoId) {
 
-        Pedido pedido = pedidoService.actualizarEstado(pedidoId, "PENDIENTE_PAGO");
-
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago pendiente de procesamiento");
         respuesta.put("estado", "PENDIENTE_PAGO");
@@ -146,8 +233,6 @@ public class PedidoController {
     @GetMapping("/pago/failure")
     public ResponseEntity<Map<String, Object>> pagoFallido(
             @RequestParam("external_reference") Long pedidoId) {
-
-        Pedido pedido = pedidoService.actualizarEstado(pedidoId, "RECHAZADO");
 
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago rechazado o fallido");

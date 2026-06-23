@@ -16,155 +16,134 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CarritoItemController {
 
-    private final CarritoItemService carritoItemService;
-    //Cargar Carrito
-    @PostMapping
-    public ResponseEntity<CarritoItemResponse> agregarProducto(
-            @PathVariable Long carritoId,
-            @RequestBody CarritoItemRequest request
-    ) {
+        private final CarritoItemService carritoItemService;
 
-        CarritoItem item = carritoItemService.agregarProducto(
-                carritoId,
-                request.getProductoId(),
-                request.getCantidad()
-        );
+        // Cargar Carrito
+        @PostMapping
+        public ResponseEntity<CarritoItemResponse> agregarProducto(
+                        @PathVariable Long carritoId,
+                        @RequestBody CarritoItemRequest request) {
 
-        return ResponseEntity.ok(convertirResponse(item));
-    }
+                CarritoItem item = carritoItemService.agregarProducto(
+                                carritoId,
+                                request.getProductoId(),
+                                request.getCantidad());
 
-    private CarritoItemResponse convertirResponse(CarritoItem item) {
+                return ResponseEntity.ok(convertirResponse(item));
+        }
 
-        CarritoItemResponse response = new CarritoItemResponse();
+        private CarritoItemResponse convertirResponse(CarritoItem item) {
 
-        response.setId(item.getId());
-        response.setCantidad(item.getCantidad());
+                CarritoItemResponse response = new CarritoItemResponse();
 
-        response.setProductoId(item.getProducto().getId());
-        response.setNombreProducto(item.getProducto().getNombre());
-        response.setDescripcion(item.getProducto().getDescripcion());
-        response.setImagenUrl(item.getProducto().getImagenUrl());
-        response.setPrecio(item.getProducto().getPrecio());
+                response.setId(item.getId());
+                response.setCantidad(item.getCantidad());
 
-        response.setVariantes(List.of());
+                response.setProductoId(item.getProducto().getId());
+                response.setNombreProducto(item.getProducto().getNombre());
+                response.setDescripcion(item.getProducto().getDescripcion());
+                response.setImagenUrl(item.getProducto().getImagenUrl());
+                response.setPrecio(item.getProducto().getPrecio());
 
-        response.setSubtotal(
-                item.getProducto()
-                        .getPrecio()
-                        .multiply(BigDecimal.valueOf(item.getCantidad()))
-        );
+                response.setVariantes(List.of());
 
-        return response;
-    }
+                response.setSubtotal(
+                                item.getProducto()
+                                                .getPrecio()
+                                                .multiply(BigDecimal.valueOf(item.getCantidad())));
 
-  @GetMapping
-public ResponseEntity<List<CarritoItemResponse>> obtenerItems(
-        @PathVariable Long carritoId
-) {
+                return response;
+        }
 
-    List<CarritoItemResponse> items =
-            carritoItemService.obtenerItems(carritoId)
-                    .stream()
-                    .map(this::convertirResponse)
-                    .toList();
+        @GetMapping
+        public ResponseEntity<List<CarritoItemResponse>> obtenerItems(
+                        @PathVariable Long carritoId) {
 
-    return ResponseEntity.ok(items);
-}
+                List<CarritoItemResponse> items = carritoItemService.obtenerItems(carritoId)
+                                .stream()
+                                .map(this::convertirResponse)
+                                .toList();
 
-  @GetMapping("/{productoId}")
-public ResponseEntity<CarritoItemResponse> obtenerItem(
-        @PathVariable Long carritoId,
-        @PathVariable Long productoId
-) {
+                return ResponseEntity.ok(items);
+        }
 
-    CarritoItem item = carritoItemService.obtenerItem(
-            carritoId,
-            productoId
-    );
+        @GetMapping("/{productoId}")
+        public ResponseEntity<CarritoItemResponse> obtenerItem(
+                        @PathVariable Long carritoId,
+                        @PathVariable Long productoId) {
 
-    return ResponseEntity.ok(
-            convertirResponse(item)
-    );
-}
+                CarritoItem item = carritoItemService.obtenerItem(
+                                carritoId,
+                                productoId);
 
-    @PutMapping("/{productoId}/disminuir")
-    public ResponseEntity<Void> disminuirCantidad(
-            @PathVariable Long carritoId,
-            @PathVariable Long productoId
-    ) {
+                return ResponseEntity.ok(
+                                convertirResponse(item));
+        }
 
-        carritoItemService.disminuirCantidad(
-                carritoId,
-                productoId
-        );
+        @PutMapping("/{productoId}/disminuir")
+        public ResponseEntity<Void> disminuirCantidad(
+                        @PathVariable Long carritoId,
+                        @PathVariable Long productoId) {
 
-        return ResponseEntity.noContent().build();
-    }
+                carritoItemService.disminuirCantidad(
+                                carritoId,
+                                productoId);
 
-    @PutMapping("/{productoId}")
-public ResponseEntity<CarritoItemResponse> actualizarCantidad(
-        @PathVariable Long carritoId,
-        @PathVariable Long productoId,
-        @RequestParam Integer cantidad
-) {
+                return ResponseEntity.noContent().build();
+        }
 
-    CarritoItem item =
-            carritoItemService.actualizarCantidad(
-                    carritoId,
-                    productoId,
-                    cantidad
-            );
+        @PutMapping("/{productoId}")
+        public ResponseEntity<CarritoItemResponse> actualizarCantidad(
+                        @PathVariable Long carritoId,
+                        @PathVariable Long productoId,
+                        @RequestParam Integer cantidad) {
 
-    return ResponseEntity.ok(
-            convertirResponse(item)
-    );
-}
+                CarritoItem item = carritoItemService.actualizarCantidad(
+                                carritoId,
+                                productoId,
+                                cantidad);
 
-    @DeleteMapping("/{productoId}")
-    public ResponseEntity<Void> eliminarProducto(
-            @PathVariable Long carritoId,
-            @PathVariable Long productoId
-    ) {
+                return ResponseEntity.ok(
+                                convertirResponse(item));
+        }
 
-        carritoItemService.eliminarProducto(
-                carritoId,
-                productoId
-        );
+        @DeleteMapping("/{productoId}")
+        public ResponseEntity<Void> eliminarProducto(
+                        @PathVariable Long carritoId,
+                        @PathVariable Long productoId) {
 
-        return ResponseEntity.noContent().build();
-    }
+                carritoItemService.eliminarProducto(
+                                carritoId,
+                                productoId);
 
-    @DeleteMapping
-    public ResponseEntity<Void> vaciarCarrito(
-            @PathVariable Long carritoId
-    ) {
+                return ResponseEntity.noContent().build();
+        }
 
-        carritoItemService.vaciarCarrito(carritoId);
+        @DeleteMapping
+        public ResponseEntity<Void> vaciarCarrito(
+                        @PathVariable Long carritoId) {
 
-        return ResponseEntity.noContent().build();
-    }
+                carritoItemService.vaciarCarrito(carritoId);
 
-    @GetMapping("/count")
-    public ResponseEntity<Long> contarProductos(
-            @PathVariable Long carritoId
-    ) {
+                return ResponseEntity.noContent().build();
+        }
 
-        return ResponseEntity.ok(
-                carritoItemService.contarProductos(carritoId)
-        );
-    }
+        @GetMapping("/count")
+        public ResponseEntity<Long> contarProductos(
+                        @PathVariable Long carritoId) {
 
-    @GetMapping("/{productoId}/exists")
-    public ResponseEntity<Boolean> existeProducto(
-            @PathVariable Long carritoId,
-            @PathVariable Long productoId
-    ) {
+                return ResponseEntity.ok(
+                                carritoItemService.contarProductos(carritoId));
+        }
 
-        return ResponseEntity.ok(
-                carritoItemService.existeProducto(
-                        carritoId,
-                        productoId
-                )
-        );
-    }
+        @GetMapping("/{productoId}/exists")
+        public ResponseEntity<Boolean> existeProducto(
+                        @PathVariable Long carritoId,
+                        @PathVariable Long productoId) {
+
+                return ResponseEntity.ok(
+                                carritoItemService.existeProducto(
+                                                carritoId,
+                                                productoId));
+        }
 }

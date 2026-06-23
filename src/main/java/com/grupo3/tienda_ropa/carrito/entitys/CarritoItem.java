@@ -25,8 +25,8 @@ private CarritoEntity carrito;
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
-    @Column(nullable = false)
-    private Integer cantidad;
+    @Column(name = "cantidad", nullable = false)
+    private Integer cantidad = 1;
 
   
 }
