@@ -52,6 +52,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/usuarios/me").authenticated()
                         // Solo administradores pueden listar o gestionar otros usuarios
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
+                        // Catálogo de colores es público para lectura
+                        .requestMatchers(HttpMethod.GET, "/api/colores", "/api/colores/**").permitAll()
+                        // Solo administradores pueden agregar/modificar colores
+                        .requestMatchers("/api/colores/**").hasRole("ADMIN")
+                        // Catálogo de categorías es público para lectura
+                        .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/categorias/**").permitAll()
+                        // Solo administradores pueden agregar/modificar categorías
+                        .requestMatchers("/api/categorias/**").hasRole("ADMIN")
                         // Cupones: Validar es para cualquier usuario autenticado, el resto es para ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/cupones/validar").authenticated()
                         .requestMatchers("/api/cupones/**").hasRole("ADMIN")

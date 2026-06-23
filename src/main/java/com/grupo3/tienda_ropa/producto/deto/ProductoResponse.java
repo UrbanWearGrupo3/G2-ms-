@@ -1,5 +1,7 @@
 package com.grupo3.tienda_ropa.producto.deto;
 
+import com.grupo3.tienda_ropa.color.dto.ColorResponseDto;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,7 +16,7 @@ public class ProductoResponse {
     private String nombre;
     private String descripcion;
     private BigDecimal precio;
-    private String marca;
+
     private String imagenUrl;
     private Boolean activo;
     private CategoriaResponse categoria;

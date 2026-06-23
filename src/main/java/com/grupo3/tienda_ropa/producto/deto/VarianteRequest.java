@@ -13,8 +13,8 @@ public class VarianteRequest {
     @NotBlank(message = "El talle es obligatorio")
     private String talle;
 
-    @NotBlank(message = "El color es obligatorio")
-    private String color;
+    @NotNull(message = "El color es obligatorio")
+    private Long colorId;
 
     @NotNull(message = "El stock es obligatorio")
     @PositiveOrZero(message = "El stock no puede ser negativo")

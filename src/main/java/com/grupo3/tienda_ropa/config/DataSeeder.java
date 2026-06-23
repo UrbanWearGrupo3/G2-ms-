@@ -1,5 +1,8 @@
 package com.grupo3.tienda_ropa.config;
 
+import com.grupo3.tienda_ropa.color.entity.Color;
+import com.grupo3.tienda_ropa.color.repository.ColorRepository;
+
 import com.grupo3.tienda_ropa.producto.entity.Categoria;
 import com.grupo3.tienda_ropa.producto.repository.CategoriaRepository;
 import com.grupo3.tienda_ropa.usuario.entity.Rol;
@@ -17,19 +20,22 @@ public class DataSeeder implements CommandLineRunner {
     private final CategoriaRepository categoriaRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final ColorRepository colorRepository;
     public DataSeeder(CategoriaRepository categoriaRepository,
                       UsuarioRepository usuarioRepository,
-                      PasswordEncoder passwordEncoder) {
+                      PasswordEncoder passwordEncoder,
+                      ColorRepository colorRepository) {
         this.categoriaRepository = categoriaRepository;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.colorRepository = colorRepository;
     }
 
     @Override
     public void run(String... args) throws Exception {
         seedCategorias();
         seedUsuarios();
+        seedColores();
     }
 
     private void seedCategorias() {
@@ -86,4 +92,52 @@ public class DataSeeder implements CommandLineRunner {
             usuarioRepository.saveAll(List.of(admin, cliente));
         }
     }
+
+    private void seedColores() {
+        if (colorRepository.count() == 0) {
+            Color negro = new Color();
+            negro.setNombre("Negro");
+            negro.setCodigoHex("#000000");
+
+            Color blanco = new Color();
+            blanco.setNombre("Blanco");
+            blanco.setCodigoHex("#FFFFFF");
+
+            Color rojo = new Color();
+            rojo.setNombre("Rojo");
+            rojo.setCodigoHex("#FF0000");
+
+            Color azul = new Color();
+            azul.setNombre("Azul");
+            azul.setCodigoHex("#0000FF");
+
+            Color verde = new Color();
+            verde.setNombre("Verde");
+            verde.setCodigoHex("#008000");
+
+            Color gris = new Color();
+            gris.setNombre("Gris");
+            gris.setCodigoHex("#808080");
+
+            Color beige = new Color();
+            beige.setNombre("Beige");
+            beige.setCodigoHex("#F5F5DC");
+
+            Color bordo = new Color();
+            bordo.setNombre("Bordó");
+            bordo.setCodigoHex("#800020");
+
+            Color celeste = new Color();
+            celeste.setNombre("Celeste");
+            celeste.setCodigoHex("#87CEEB");
+
+            Color rosa = new Color();
+            rosa.setNombre("Rosa");
+            rosa.setCodigoHex("#FFC0CB");
+
+            colorRepository.saveAll(List.of(negro, blanco, rojo, azul, verde, gris, beige, bordo, celeste, rosa));
+        }
+    }
+
+
 }

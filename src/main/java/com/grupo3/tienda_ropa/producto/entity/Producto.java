@@ -1,5 +1,6 @@
 package com.grupo3.tienda_ropa.producto.entity;
 
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,7 +26,7 @@ public class Producto {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    private String marca;
+
 
     @Column(name = "imagen_url")
     private String imagenUrl;

@@ -1,5 +1,6 @@
 package com.grupo3.tienda_ropa.producto.deto;
 
+import com.grupo3.tienda_ropa.color.dto.ColorResponseDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +9,7 @@ import lombok.Setter;
 public class VarianteResponse {
     private Long id;
     private String talle;
-    private String color;
+    private ColorResponseDto color;
     private Integer stock;
     private String codigoBarras;
 }

@@ -24,7 +24,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     @Query("SELECT DISTINCT p FROM Producto p LEFT JOIN p.variantes v " +
            "WHERE (:categoriaId IS NULL OR p.categoria.id = :categoriaId) " +
            "AND (:talle IS NULL OR LOWER(v.talle) = LOWER(CAST(:talle AS string))) " +
-           "AND (:color IS NULL OR LOWER(v.color) = LOWER(CAST(:color AS string))) " +
+           "AND (:color IS NULL OR LOWER(v.color.nombre) = LOWER(CAST(:color AS string))) " +
            "AND (:precioMin IS NULL OR p.precio >= :precioMin) " +
            "AND (:precioMax IS NULL OR p.precio <= :precioMax) " +
            "AND (:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', CAST(:nombre AS string), '%'))) " +

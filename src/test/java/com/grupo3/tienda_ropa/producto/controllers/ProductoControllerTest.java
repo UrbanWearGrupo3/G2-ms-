@@ -103,7 +103,7 @@ public class ProductoControllerTest {
     void testAgregarVariante() {
         VarianteRequest varRequest = new VarianteRequest();
         varRequest.setTalle("L");
-        varRequest.setColor("Azul");
+        varRequest.setColorId(1L);
         varRequest.setStock(15);
 
         when(productoService.addVariante(eq(1L), any(VarianteRequest.class))).thenReturn(productoResponse);
