@@ -24,19 +24,17 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@RequiredArgsConstructor // ✅ Esto genera el constructor con todos los final
+@RequiredArgsConstructor
 public class PedidoController {
 
     private static final Logger logger = LoggerFactory.getLogger(PedidoController.class);
 
-    // ✅ Hacerlos final para que RequiredArgsConstructor los incluya
     private final PedidoService pedidoService;
     private final MercadoPagoService mercadoPagoService;
 
     @Value("${mercadopago.access-token}")
     private String accessToken;
 
-    // ==================== WEBHOOK ====================
     @PostMapping("/pago/webhook")
     public ResponseEntity<Void> webhookPago(
             @RequestBody Map<String, Object> payload,
@@ -141,19 +139,23 @@ public class PedidoController {
         
         if (signature == null || signature.isEmpty()) {
             logger.warn("⚠️ Notificación sin firma - podría ser prueba");
-            return true; // Solo para desarrollo
+            return true; 
         }
         return false;
     }
 
-    // ==================== ENDPOINTS EXISTENTES ====================
+    // ==================== CONFIRMAR PEDIDO ====================
+    
     @PostMapping("/confirmar")
     public ResponseEntity<Pedido> confirmarPedido() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long usuarioId = Long.parseLong(authentication.getName());
-        Pedido pedido = pedidoService.confirmarPedido(usuarioId);
+        String email = authentication.getName();
+        Pedido pedido = pedidoService.confirmarPedidoPorEmail(email);
+        
         return ResponseEntity.ok(pedido);
     }
+
+    // ==================== OBTENER PEDIDOS ====================
 
     @GetMapping
     public ResponseEntity<List<Pedido>> obtenerTodosLosPedidos() {
@@ -163,7 +165,12 @@ public class PedidoController {
     @GetMapping("/mis-pedidos")
     public ResponseEntity<List<Pedido>> obtenerMisPedidos() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long usuarioId = Long.parseLong(authentication.getName());
+        String email = authentication.getName();
+        
+        // 2. Obtener ID del usuario por email
+        Long usuarioId = pedidoService.obtenerUsuarioIdPorEmail(email);
+        
+        // 3. Obtener pedidos del usuario
         return ResponseEntity.ok(pedidoService.obtenerPedidosUsuario(usuarioId));
     }
 
@@ -174,16 +181,26 @@ public class PedidoController {
 
     @GetMapping("/mis-pedidos/estado/{estado}")
     public ResponseEntity<List<Pedido>> obtenerMisPedidosPorEstado(@PathVariable String estado) {
+        // 1. Obtener email del token
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long usuarioId = Long.parseLong(authentication.getName());
+        String email = authentication.getName();
+        
+        // 2. Obtener ID del usuario por email
+        Long usuarioId = pedidoService.obtenerUsuarioIdPorEmail(email);
+        
+        // 3. Obtener pedidos del usuario por estado
         return ResponseEntity.ok(pedidoService.obtenerPedidosUsuarioPorEstado(usuarioId, estado));
     }
+
+    // ==================== ACTUALIZAR ESTADO ====================
 
     @PatchMapping("/{id}/estado")
     public ResponseEntity<Pedido> actualizarEstado(@PathVariable Long id, @RequestParam String estado) {
         Pedido pedidoActualizado = pedidoService.actualizarEstado(id, estado);
         return ResponseEntity.ok(pedidoActualizado);
     }
+
+    // ==================== INICIAR PAGO ====================
 
     @PostMapping("/{id}/pagar")
     public ResponseEntity<Map<String, String>> iniciarPago(@PathVariable Long id) {
@@ -198,11 +215,16 @@ public class PedidoController {
         return ResponseEntity.ok(respuesta);
     }
 
+    // ==================== CALLBACKS DE PAGO ====================
+
     @GetMapping("/pago/success")
     public ResponseEntity<Map<String, Object>> pagoExitoso(
             @RequestParam("payment_id") String paymentId,
             @RequestParam("status") String status,
             @RequestParam("external_reference") Long pedidoId) {
+
+        // Actualizar estado del pedido a PAGADO
+        pedidoService.actualizarEstado(pedidoId, "PAGADO");
 
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago aprobado con éxito");
@@ -220,6 +242,9 @@ public class PedidoController {
             @RequestParam("status") String status,
             @RequestParam("external_reference") Long pedidoId) {
 
+        // Actualizar estado del pedido a PENDIENTE_PAGO
+        pedidoService.actualizarEstado(pedidoId, "PENDIENTE_PAGO");
+
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago pendiente de procesamiento");
         respuesta.put("estado", "PENDIENTE_PAGO");
@@ -234,6 +259,9 @@ public class PedidoController {
     public ResponseEntity<Map<String, Object>> pagoFallido(
             @RequestParam("external_reference") Long pedidoId) {
 
+        // Actualizar estado del pedido a RECHAZADO
+        pedidoService.actualizarEstado(pedidoId, "RECHAZADO");
+
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago rechazado o fallido");
         respuesta.put("estado", "RECHAZADO");
@@ -241,4 +269,6 @@ public class PedidoController {
 
         return ResponseEntity.ok(respuesta);
     }
-}
+
+  
+    }

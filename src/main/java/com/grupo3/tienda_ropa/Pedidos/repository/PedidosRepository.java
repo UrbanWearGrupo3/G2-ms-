@@ -16,4 +16,5 @@ public interface PedidosRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByUsuarioIdAndEstado(Long usuarioId, String estado);
 
+    boolean existsByUsuarioIdAndCuponCodigoIgnoreCaseAndEstadoNotIn(Long usuarioId, String cuponCodigo, java.util.Collection<String> estados);
 }

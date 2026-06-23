@@ -20,6 +20,8 @@ import com.grupo3.tienda_ropa.carrito.repository.CarritoRepository;
 import com.grupo3.tienda_ropa.notification.dto.NotificationRequest;
 import com.grupo3.tienda_ropa.notification.model.NotificationType;
 import com.grupo3.tienda_ropa.notification.service.EmailNotificationService;
+import com.grupo3.tienda_ropa.usuario.entity.Usuario;
+import com.grupo3.tienda_ropa.usuario.repository.UsuarioRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,27 +36,61 @@ public class PedidoService {
     private final PedidosRepository pedidosRepository;
     private final DetallePedidosRepository detallePedidosRepository;
     private final EmailNotificationService emailNotificationService;
+    private final UsuarioRepository usuarioRepository;
 
+    // ==================== MÉTODOS AUXILIARES PARA USUARIO ====================
+
+    /**
+     * Obtiene un usuario por su email
+     */
+    public Usuario obtenerUsuarioPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
+    }
+
+    /**
+     * Obtiene el ID de un usuario por su email
+     */
+    public Long obtenerUsuarioIdPorEmail(String email) {
+        Usuario usuario = obtenerUsuarioPorEmail(email);
+        return usuario.getId();
+    }
+
+    // ==================== MÉTODOS DE CONFIRMACIÓN DE PEDIDO ====================
+
+    public Pedido confirmarPedidoPorEmail(String email) {
+        Long usuarioId = obtenerUsuarioIdPorEmail(email);
+        
+        return confirmarPedido(usuarioId);
+    }
     public Pedido confirmarPedido(Long usuarioId) {
-
+        // 1. Obtener carrito del usuario
         CarritoEntity carrito = carritoRepository
                 .findByUsuario_Id(usuarioId)
-                .orElseThrow(() ->
-                        new RuntimeException("Carrito no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Carrito no encontrado"));
 
-        List<CarritoItem> items =
-                carritoItemRepo.findByCarritoId(carrito.getId());
+        // 2. Obtener items del carrito
+        List<CarritoItem> items = carritoItemRepo.findByCarritoId(carrito.getId());
 
         if (items.isEmpty()) {
             throw new RuntimeException("El carrito está vacío");
         }
 
+        // 3. Validar cantidades
+        items.forEach(item -> {
+            if (item.getCantidad() == null || item.getCantidad() <= 0) {
+                throw new RuntimeException("Cantidad inválida para producto: " + 
+                    item.getProducto().getNombre());
+            }
+        });
+
+        // 4. Calcular total
         BigDecimal total = items.stream()
                 .map(item -> item.getProducto().getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // 5. Crear pedido
         Pedido pedido = new Pedido();
-
         pedido.setUsuario(carrito.getUsuario());
         pedido.setEstado("PENDIENTE");
         pedido.setFecha(LocalDateTime.now());
@@ -62,30 +98,32 @@ public class PedidoService {
 
         Pedido pedidoGuardado = pedidosRepository.save(pedido);
 
+        // 6. Crear detalles del pedido
         List<PedidosDetalles> detalles = items.stream()
                 .map(item -> {
-
                     PedidosDetalles detalle = new PedidosDetalles();
-
                     detalle.setPedido(pedidoGuardado);
                     detalle.setProducto(item.getProducto());
                     detalle.setCantidad(item.getCantidad());
-
                     return detalle;
                 })
                 .toList();
 
         detallePedidosRepository.saveAll(detalles);
 
+        // 7. Limpiar carrito
         carritoItemRepo.deleteAll(items);
 
+        // 8. Asociar detalles al pedido
         pedidoGuardado.setDetalles(detalles);
 
+        // 9. Enviar notificación
         enviarNotificacionConfirmacion(pedidoGuardado);
 
         return pedidoGuardado;
     }
 
+    // ==================== MÉTODOS DE CONSULTA ====================
 
     public List<Pedido> obtenerPedidosUsuario(Long usuarioId) {
         return pedidosRepository.findByUsuarioId(usuarioId);
@@ -95,22 +133,22 @@ public class PedidoService {
         return pedidosRepository.findByEstado(estado);
     }
 
-    public List<Pedido> obtenerPedidosUsuarioPorEstado(
-            Long usuarioId,
-            String estado
-    ) {
+    public List<Pedido> obtenerPedidosUsuarioPorEstado(Long usuarioId, String estado) {
         return pedidosRepository.findByUsuarioIdAndEstado(usuarioId, estado);
     }
+
     public List<Pedido> obtenerTodosLosPedidos() {
         return pedidosRepository.findAll();
     }
+
     public Pedido obtenerPedidoPorId(Long pedidoId) {
         return pedidosRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
     }
 
-    public Pedido actualizarEstado(Long pedidoId, String nuevoEstado) {
+    // ==================== MÉTODOS DE ACTUALIZACIÓN ====================
 
+    public Pedido actualizarEstado(Long pedidoId, String nuevoEstado) {
         Pedido pedido = pedidosRepository.findById(pedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
 
@@ -122,6 +160,8 @@ public class PedidoService {
 
         return pedidoGuardado;
     }
+
+    // ==================== MÉTODOS DE NOTIFICACIÓN ====================
 
     private void enviarNotificacionConfirmacion(Pedido pedido) {
         try {

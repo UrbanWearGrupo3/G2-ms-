@@ -35,7 +35,7 @@ Para ver la base de datos en tiempo real y realizar consultas SQL, puedes accede
 ## 📐 Modelo de Datos (Multi-Entidad)
 
 El diseño del catálogo soporta prendas de vestir y control de acceso utilizando las siguientes entidades vinculadas:
-* **`Producto`**: Contiene la información general de la prenda (nombre, descripción, precio base, marca, URL de imagen, y categoría).
+* **`Producto`**: Contiene la información general de la prenda (nombre, descripción, precio base, URL de imagen, y categoría).
 * **`Variante`**: Representa la combinación física e inventario de un producto en un **talle** y **color** específico, con su propio **stock** y **código de barras** (SKU).
 * **`Categoria`**: Clasificación jerárquica para organizar las prendas (ej. Remeras, Pantalones, Camperas, Accesorios).
 * **`Usuario`**: Representa las cuentas registradas con información personal, credenciales encriptadas con BCrypt y un **Rol** (`CLIENTE` o `ADMIN`).
@@ -141,7 +141,6 @@ La URL base para todas las peticiones es: `http://localhost:8080`
     "nombre": "Remera Slim Fit",
     "descripcion": "Remera de algodón de alta calidad",
     "precio": 15000.00,
-    "marca": "UrbanWear",
     "imagenUrl": "http://images.com/remera.png",
     "categoriaId": 1,
     "variantes": [
@@ -181,3 +180,38 @@ La URL base para todas las peticiones es: `http://localhost:8080`
   }
   ```
 
+---
+
+### 📂 Módulo de Categorías (`/api/categorias`)
+
+#### 1. Listar Categorías (Público)
+* **Método:** `GET`
+* **Endpoint:** `/api/categorias`
+* **Parámetros de Query:** `soloActivas` (opcional, true/false)
+
+#### 2. Obtener Categoría por ID (Público)
+* **Método:** `GET`
+* **Endpoint:** `/api/categorias/{id}`
+
+#### 3. Crear Categoría (Solo ADMIN)
+* **Método:** `POST`
+* **Endpoint:** `/api/categorias`
+* **Cuerpo de la Petición:**
+  ```json
+  {
+    "nombre": "Remeras",
+    "descripcion": "Remeras de algodón de alta calidad"
+  }
+  ```
+
+#### 4. Actualizar Categoría (Solo ADMIN)
+* **Método:** `PUT`
+* **Endpoint:** `/api/categorias/{id}`
+
+#### 5. Eliminar/Desactivar Categoría (Solo ADMIN)
+* **Método:** `DELETE`
+* **Endpoint:** `/api/categorias/{id}`
+
+#### 6. Alternar Estado Activo de Categoría (Solo ADMIN)
+* **Método:** `PATCH`
+* **Endpoint:** `/api/categorias/{id}/activo?activo=true`

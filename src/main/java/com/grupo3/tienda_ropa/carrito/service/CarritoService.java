@@ -17,25 +17,29 @@ public class CarritoService {
     private final UsuarioService usuarioService;
 
     public CarritoEntity obtenerOCrearCarrito(Long usuarioId) {
+
         return carritoRepository.findByUsuario_Id(usuarioId)
                 .orElseGet(() -> {
-                    Usuario usuario = usuarioService.obtenerUsuarioPorId(usuarioId);
+
+                    Usuario usuario =
+                            usuarioService.obtenerUsuarioPorId(usuarioId);
+
                     CarritoEntity carrito = new CarritoEntity();
                     carrito.setUsuario(usuario);
+
                     return carritoRepository.save(carrito);
                 });
     }
 
     public CarritoEntity obtenerOCrearCarritoPorEmail(String email) {
-        Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
+
+        Usuario usuario =
+                usuarioService.obtenerUsuarioPorEmail(email);
+
         return obtenerOCrearCarrito(usuario.getId());
     }
 
     public CarritoEntity obtenerCarrito(Long usuarioId) {
         return obtenerOCrearCarrito(usuarioId);
-    }
-
-    public CarritoEntity obtenerCarritoPorEmail(String email) {
-        return obtenerOCrearCarritoPorEmail(email);
     }
 }

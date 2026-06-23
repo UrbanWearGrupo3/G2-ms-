@@ -23,8 +23,6 @@ public class ProductoRequest {
     @Positive(message = "El precio debe ser mayor a 0")
     private BigDecimal precio;
 
-    private String marca;
-
     private String imagenUrl;
 
     @NotNull(message = "La categoría es obligatoria")

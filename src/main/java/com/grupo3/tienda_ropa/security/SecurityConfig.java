@@ -38,9 +38,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Rutas públicas de autenticación, base de datos h2 y redirecciones de Mercado
-                        // Pago
-                        .requestMatchers("/api/auth/**", "/h2-console/**", "/api/internal/**", "/api/pedidos/pago/**")
+                        // Rutas públicas de autenticación, base de datos h2, redirecciones de Mercado Pago y errores
+                        .requestMatchers("/api/auth/**", "/h2-console/**", "/api/internal/**", "/api/pedidos/pago/**", "/error")
                         .permitAll()
                         // El catálogo de ropa es público para lectura
                         .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()
@@ -49,15 +48,26 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/resenias/**").permitAll()
                         .requestMatchers("/api/resenias/**").authenticated()
                         // Carga de imágenes de productos (solo administradores)
-                        .requestMatchers(HttpMethod.POST, "/api/productos/upload").hasRole("ADMIN")
-                        // SOLO LOS ADMINS PUEDEN INGRESAR A TODOS LOS PEDIDOS
-                        .requestMatchers(HttpMethod.POST, "/api/pedidos").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/productos/upload").hasAnyRole("ADMIN", "SUPER_USER")
                         // Solo administradores pueden agregar/modificar productos y variantes
-                        .requestMatchers("/api/productos/**").hasRole("ADMIN")
+                        .requestMatchers("/api/productos/**").hasAnyRole("ADMIN", "SUPER_USER")
                         // Los usuarios autenticados pueden ver y actualizar su perfil
                         .requestMatchers("/api/usuarios/me").authenticated()
                         // Solo administradores pueden listar o gestionar otros usuarios
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers("/api/usuarios/**").hasAnyRole("ADMIN", "SUPER_USER")
+                        // Catálogo de colores es público para lectura
+                        .requestMatchers(HttpMethod.GET, "/api/colores", "/api/colores/**").permitAll()
+                        // Solo administradores pueden agregar/modificar colores
+                        .requestMatchers("/api/colores/**").hasAnyRole("ADMIN", "SUPER_USER")
+                        // Catálogo de categorías es público para lectura
+                        .requestMatchers(HttpMethod.GET, "/api/categorias", "/api/categorias/**").permitAll()
+                        // Solo administradores pueden agregar/modificar categorías
+                        .requestMatchers("/api/categorias/**").hasAnyRole("ADMIN", "SUPER_USER")
+                        // Cupones: Validar es para cualquier usuario autenticado, el resto es para ADMIN
+                        .requestMatchers(HttpMethod.POST, "/api/cupones/validar").authenticated()
+                        .requestMatchers("/api/cupones/**").hasAnyRole("ADMIN", "SUPER_USER")
+                        // Rutas exclusivas para Superusuario
+                        .requestMatchers("/api/super-user/**").hasRole("SUPER_USER")
                         // Cualquier otra petición requiere login básico
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
