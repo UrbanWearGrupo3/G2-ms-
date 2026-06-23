@@ -1,5 +1,6 @@
 package com.grupo3.tienda_ropa.producto.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.grupo3.tienda_ropa.color.entity.Color;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,6 +21,7 @@ public class Variante {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)
+    @JsonIgnore
     private Producto producto;
 
     @Column(nullable = false)
