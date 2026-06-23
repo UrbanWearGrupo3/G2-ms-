@@ -17,21 +17,23 @@ import java.util.Map;
 public class InternalBackupReportController {
 
     private final EmailNotificationService notificationService;
-
-    @Value("${security.internal-token:urbanwear-secret-token-2026}")
-    private String internalToken;
+    private final com.grupo3.tienda_ropa.config.dynamic.service.DynamicConfigService dynamicConfigService;
 
     @Value("${notification.admin-email:admin@urbanwear.com}")
     private String adminEmail;
 
-    public InternalBackupReportController(EmailNotificationService notificationService) {
+    public InternalBackupReportController(EmailNotificationService notificationService,
+                                          com.grupo3.tienda_ropa.config.dynamic.service.DynamicConfigService dynamicConfigService) {
         this.notificationService = notificationService;
+        this.dynamicConfigService = dynamicConfigService;
     }
 
     @PostMapping("/backups/report")
     public ResponseEntity<String> handleBackupReport(
             @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody BackupReportDto report) {
+
+        String internalToken = dynamicConfigService.getValue("INTERNAL_TOKEN", "security.internal-token");
 
         // Validar token de seguridad compartido
         if (authHeader == null || !authHeader.equals("Bearer " + internalToken)) {

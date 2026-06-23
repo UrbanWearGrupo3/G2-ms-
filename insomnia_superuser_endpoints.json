@@ -1,0 +1,289 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-06-23T15:20:00.000Z",
+  "__export_source": "insomnia.desktop.app:v9.2.0",
+  "resources": [
+    {
+      "_id": "wrk_superuser_1",
+      "parentId": null,
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "name": "UrbanWear - SuperUser & Config",
+      "description": "Colección de endpoints para la gestión dinámica de credenciales y variables de entorno por parte del Superusuario.",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_superuser_1",
+      "parentId": "wrk_superuser_1",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "name": "Entorno Local",
+      "data": {
+        "base_url": "http://localhost:8080",
+        "token": "REPLACE_WITH_JWT_TOKEN_AFTER_LOGIN"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url",
+          "token"
+        ]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1782228000000,
+      "_type": "environment"
+    },
+    {
+      "_id": "fld_superuser_1",
+      "parentId": "wrk_superuser_1",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "name": "1. Autenticación",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1782228000000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_superuser_2",
+      "parentId": "wrk_superuser_1",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "name": "2. Gestión de Credenciales (SuperUser)",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1782227000000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_superuser_3",
+      "parentId": "wrk_superuser_1",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "name": "3. Integraciones de Sistema",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1782226000000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_superuser_login",
+      "parentId": "fld_superuser_1",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/auth/login",
+      "name": "Login Superusuario",
+      "description": "Inicia sesión con la cuenta de superusuario del sistema para obtener el token JWT necesario para realizar cambios.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"superuser@urbanwear.com\",\n  \"password\": \"superuser123\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782228000000,
+      "isPrivate": false,
+      "_type": "request"
+    },
+    {
+      "_id": "req_superuser_list",
+      "parentId": "fld_superuser_2",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/super-user/config",
+      "name": "Listar Variables de Entorno",
+      "description": "Obtiene la lista completa de configuraciones del entorno y credenciales sensibles. Los valores confidenciales se devuelven enmascarados.",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782228000000,
+      "isPrivate": false,
+      "_type": "request"
+    },
+    {
+      "_id": "req_superuser_get_masked",
+      "parentId": "fld_superuser_2",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/super-user/config/INTERNAL_TOKEN",
+      "name": "Obtener Variable (Enmascarada)",
+      "description": "Obtiene el valor actual de una variable por su clave en formato enmascarado.",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782227000000,
+      "isPrivate": false,
+      "_type": "request"
+    },
+    {
+      "_id": "req_superuser_get_unmasked",
+      "parentId": "fld_superuser_2",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/super-user/config/INTERNAL_TOKEN?unmasked=true",
+      "name": "Obtener Variable (Revelada / Unmasked)",
+      "description": "Obtiene el valor original (desenmascarado) de una variable de entorno. Requiere explícitamente el parámetro `unmasked=true`.",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782226000000,
+      "isPrivate": false,
+      "_type": "request"
+    },
+    {
+      "_id": "req_superuser_update",
+      "parentId": "fld_superuser_2",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/super-user/config/MERCADOPAGO_ACCESS_TOKEN",
+      "name": "Actualizar Variable Manualmente",
+      "description": "Permite modificar el valor de una variable de configuración o credencial y genera un registro de auditoría del cambio.",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"valor\": \"APP_USR-NUEVO-TOKEN-MERCADOPAGO-2026-XYZ\",\n  \"descripcion\": \"Token de producción actualizado vía panel de superusuario por rotación anual.\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782225000000,
+      "isPrivate": false,
+      "_type": "request"
+    },
+    {
+      "_id": "req_superuser_regenerate",
+      "parentId": "fld_superuser_2",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/super-user/config/regenerate-internal-token",
+      "name": "Regenerar Token Interno",
+      "description": "Genera de manera automática un nuevo token interno (INTERNAL_TOKEN) seguro y de alta entropía. El nuevo valor se devuelve plano en la respuesta de forma única para que pueda ser copiado.",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782224000000,
+      "isPrivate": false,
+      "_type": "request"
+    },
+    {
+      "_id": "req_superuser_auditoria",
+      "parentId": "fld_superuser_2",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/super-user/config/auditoria",
+      "name": "Ver Historial de Auditorías",
+      "description": "Lista el historial completo de auditorías registradas sobre las variables de entorno, ordenadas cronológicamente con la más reciente primero.",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782223000000,
+      "isPrivate": false,
+      "_type": "request"
+    },
+    {
+      "_id": "req_superuser_delete",
+      "parentId": "fld_superuser_2",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/super-user/config/MERCADOPAGO_ACCESS_TOKEN",
+      "name": "Restablecer Variable (Delete Override)",
+      "description": "Elimina la configuración de la base de datos para que el sistema vuelva a tomar el valor por defecto configurado en las variables de entorno o archivo .env.",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782222000000,
+      "isPrivate": false,
+      "_type": "request"
+    },
+    {
+      "_id": "req_system_backup_report",
+      "parentId": "fld_superuser_3",
+      "modified": 1782228000000,
+      "created": 1782228000000,
+      "url": "{{ _.base_url }}/api/internal/backups/report",
+      "name": "Enviar Reporte de Backup (Token Interno)",
+      "description": "Prueba de integración que simula el script automático que reporta el estado del backup. Utiliza el token interno en el encabezado Authorization.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"filename\": \"urbanwear-db-backup-2026-06-23.sql\",\n  \"status\": \"SUCCESS\",\n  \"error\": \"\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer <PONER_EL_NUEVO_INTERNAL_TOKEN_AQUI>"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1782228000000,
+      "isPrivate": false,
+      "_type": "request"
+    }
+  ]
+}

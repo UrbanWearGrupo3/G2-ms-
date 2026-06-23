@@ -71,6 +71,15 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedUsuarios() {
         if (usuarioRepository.count() == 0) {
+            // Superusuario por defecto para pruebas de configuración
+            Usuario superuser = new Usuario();
+            superuser.setNombre("Super");
+            superuser.setApellido("User");
+            superuser.setEmail("superuser@urbanwear.com");
+            superuser.setPassword(passwordEncoder.encode("superuser123"));
+            superuser.setRol(Rol.SUPER_USER);
+            superuser.setActivo(true);
+
             // Admin por defecto para pruebas
             Usuario admin = new Usuario();
             admin.setNombre("Administrador");
@@ -89,7 +98,7 @@ public class DataSeeder implements CommandLineRunner {
             cliente.setRol(Rol.CLIENTE);
             cliente.setActivo(true);
 
-            usuarioRepository.saveAll(List.of(admin, cliente));
+            usuarioRepository.saveAll(List.of(superuser, admin, cliente));
         }
     }
 

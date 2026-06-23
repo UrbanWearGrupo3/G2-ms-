@@ -16,6 +16,8 @@ import com.mercadopago.resources.preference.Preference;
 @Service
 public class MercadoPagoService {
 
+    private final com.grupo3.tienda_ropa.config.dynamic.service.DynamicConfigService dynamicConfigService;
+
     @Value("${mercadopago.back-urls.success}")
     private String successUrl;
 
@@ -25,8 +27,18 @@ public class MercadoPagoService {
     @Value("${mercadopago.back-urls.failure}")
     private String failureUrl;
 
+    public MercadoPagoService(com.grupo3.tienda_ropa.config.dynamic.service.DynamicConfigService dynamicConfigService) {
+        this.dynamicConfigService = dynamicConfigService;
+    }
+
     public Preference crearPreferenciaDePago(Pedido pedido) {
         try {
+            // Resolver el token dinámicamente y asignarlo al SDK
+            String mpToken = dynamicConfigService.getValue("MERCADOPAGO_ACCESS_TOKEN", "mercadopago.access-token");
+            if (mpToken != null && !mpToken.trim().isEmpty()) {
+                com.mercadopago.MercadoPagoConfig.setAccessToken(mpToken);
+            }
+
             PreferenceClient client = new PreferenceClient();
 
             List<PreferenceItemRequest> items;

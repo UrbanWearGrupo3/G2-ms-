@@ -4,10 +4,12 @@ package com.grupo3.tienda_ropa;
 import com.mercadopago.MercadoPagoConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
 @EnableAsync
+@EnableCaching
 public class TiendaRopaApplication {
 
 	public static void main(String[] args) {
@@ -33,10 +35,14 @@ public class TiendaRopaApplication {
 		if (accessToken != null && !accessToken.trim().isEmpty()) {
 			MercadoPagoConfig.setAccessToken(accessToken);
 		} else {
-			throw new IllegalStateException("MERCADOPAGO_ACCESS_TOKEN not found in environment properties or .env file.");
+			System.out.println("WARN: MERCADOPAGO_ACCESS_TOKEN not found in environment properties or .env file at startup. Will fallback to database/dynamic config.");
 		}
 
 		SpringApplication.run(TiendaRopaApplication.class, args);
 	}
 
+	@org.springframework.context.annotation.Bean
+	public org.springframework.cache.CacheManager cacheManager() {
+		return new org.springframework.cache.concurrent.ConcurrentMapCacheManager("configuraciones");
+	}
 }

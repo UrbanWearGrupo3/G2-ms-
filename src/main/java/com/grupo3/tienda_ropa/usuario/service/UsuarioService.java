@@ -115,6 +115,22 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
+        // Obtener el rol del usuario autenticado
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean isSuperUser = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_USER"));
+
+        if (!isSuperUser) {
+            // Si el usuario objetivo es SUPER_USER, un ADMIN no puede modificarlo
+            if (usuario.getRol() == Rol.SUPER_USER) {
+                throw new org.springframework.security.access.AccessDeniedException("No tienes permisos para modificar a un superusuario");
+            }
+            // Si se intenta asignar el rol SUPER_USER, un ADMIN no puede hacerlo
+            if (nuevoRol == Rol.SUPER_USER) {
+                throw new org.springframework.security.access.AccessDeniedException("Un administrador no puede asignar el rol de superusuario");
+            }
+        }
+
         usuario.setRol(nuevoRol);
         Usuario usuarioActualizado = usuarioRepository.save(usuario);
         return mapToResponse(usuarioActualizado);
@@ -124,6 +140,16 @@ public class UsuarioService {
     public void delete(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // Prevenir que un administrador desactive a un superusuario
+        if (usuario.getRol() == Rol.SUPER_USER) {
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            boolean isSuperUser = auth != null && auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_USER"));
+            if (!isSuperUser) {
+                throw new org.springframework.security.access.AccessDeniedException("No tienes permisos para desactivar a un superusuario");
+            }
+        }
 
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
