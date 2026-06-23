@@ -1,5 +1,6 @@
 package com.grupo3.tienda_ropa.Pedidos.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.grupo3.tienda_ropa.producto.entity.Producto;
 
 import jakarta.persistence.Column;
@@ -25,9 +26,9 @@ public class PedidosDetalles {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pedido_id", nullable = false)
+   @JoinColumn(name = "pedido_id", nullable = false)
+    @JsonIgnore // ✅ Rompe el bucle
     private Pedido pedido;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
