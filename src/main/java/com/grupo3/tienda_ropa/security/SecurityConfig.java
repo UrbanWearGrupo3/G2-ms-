@@ -64,6 +64,9 @@ public class SecurityConfig {
                         // Cupones: Validar es para cualquier usuario autenticado, el resto es para ADMIN
                         .requestMatchers(HttpMethod.POST, "/api/cupones/validar").authenticated()
                         .requestMatchers("/api/cupones/**").hasAnyRole("ADMIN", "SUPER_USER")
+                        // Pedidos: Solo administradores pueden ver todos los pedidos o actualizar estados generales
+                        .requestMatchers(HttpMethod.GET, "/api/pedidos", "/api/pedidos/estado/**").hasAnyRole("ADMIN", "SUPER_USER")
+                        .requestMatchers(HttpMethod.PATCH, "/api/pedidos/*/estado").hasAnyRole("ADMIN", "SUPER_USER")
                         // Rutas exclusivas para Superusuario
                         .requestMatchers("/api/super-user/**").hasRole("SUPER_USER")
                         // Envios: Modificar estado de envíos es solo para administradores

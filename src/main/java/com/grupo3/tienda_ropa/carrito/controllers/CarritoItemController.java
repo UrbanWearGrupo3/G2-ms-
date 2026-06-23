@@ -2,13 +2,20 @@ package com.grupo3.tienda_ropa.carrito.controllers;
 
 import com.grupo3.tienda_ropa.carrito.dtos.CarritoItemRequest;
 import com.grupo3.tienda_ropa.carrito.dtos.CarritoItemResponse;
+import com.grupo3.tienda_ropa.carrito.entitys.CarritoEntity;
 import com.grupo3.tienda_ropa.carrito.entitys.CarritoItem;
 import com.grupo3.tienda_ropa.carrito.service.CarritoItemService;
+import com.grupo3.tienda_ropa.carrito.service.CarritoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -17,12 +24,31 @@ import java.util.List;
 public class CarritoItemController {
 
     private final CarritoItemService carritoItemService;
+    private final CarritoService carritoService;
+
+    private void validarAccesoCarrito(Long carritoId, Principal principal) {
+        if (principal == null) {
+            throw new AccessDeniedException("No autenticado");
+        }
+        CarritoEntity carritoUsuario = carritoService.obtenerOCrearCarritoPorEmail(principal.getName());
+        if (!carritoUsuario.getId().equals(carritoId)) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdminOrSuper = auth != null && auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_USER"));
+            if (!isAdminOrSuper) {
+                throw new AccessDeniedException("No tienes permiso para acceder a este carrito");
+            }
+        }
+    }
+
     //Cargar Carrito
     @PostMapping
     public ResponseEntity<CarritoItemResponse> agregarProducto(
             @PathVariable Long carritoId,
-            @RequestBody CarritoItemRequest request
+            @RequestBody CarritoItemRequest request,
+            Principal principal
     ) {
+        validarAccesoCarrito(carritoId, principal);
 
         CarritoItem item = carritoItemService.agregarProducto(
                 carritoId,
@@ -57,41 +83,47 @@ public class CarritoItemController {
         return response;
     }
 
-  @GetMapping
-public ResponseEntity<List<CarritoItemResponse>> obtenerItems(
-        @PathVariable Long carritoId
-) {
+    @GetMapping
+    public ResponseEntity<List<CarritoItemResponse>> obtenerItems(
+            @PathVariable Long carritoId,
+            Principal principal
+    ) {
+        validarAccesoCarrito(carritoId, principal);
 
-    List<CarritoItemResponse> items =
-            carritoItemService.obtenerItems(carritoId)
-                    .stream()
-                    .map(this::convertirResponse)
-                    .toList();
+        List<CarritoItemResponse> items =
+                carritoItemService.obtenerItems(carritoId)
+                        .stream()
+                        .map(this::convertirResponse)
+                        .toList();
 
-    return ResponseEntity.ok(items);
-}
+        return ResponseEntity.ok(items);
+    }
 
-  @GetMapping("/{productoId}")
-public ResponseEntity<CarritoItemResponse> obtenerItem(
-        @PathVariable Long carritoId,
-        @PathVariable Long productoId
-) {
+    @GetMapping("/{productoId}")
+    public ResponseEntity<CarritoItemResponse> obtenerItem(
+            @PathVariable Long carritoId,
+            @PathVariable Long productoId,
+            Principal principal
+    ) {
+        validarAccesoCarrito(carritoId, principal);
 
-    CarritoItem item = carritoItemService.obtenerItem(
-            carritoId,
-            productoId
-    );
+        CarritoItem item = carritoItemService.obtenerItem(
+                carritoId,
+                productoId
+        );
 
-    return ResponseEntity.ok(
-            convertirResponse(item)
-    );
-}
+        return ResponseEntity.ok(
+                convertirResponse(item)
+        );
+    }
 
     @PutMapping("/{productoId}/disminuir")
     public ResponseEntity<Void> disminuirCantidad(
             @PathVariable Long carritoId,
-            @PathVariable Long productoId
+            @PathVariable Long productoId,
+            Principal principal
     ) {
+        validarAccesoCarrito(carritoId, principal);
 
         carritoItemService.disminuirCantidad(
                 carritoId,
@@ -102,29 +134,33 @@ public ResponseEntity<CarritoItemResponse> obtenerItem(
     }
 
     @PutMapping("/{productoId}")
-public ResponseEntity<CarritoItemResponse> actualizarCantidad(
-        @PathVariable Long carritoId,
-        @PathVariable Long productoId,
-        @RequestParam Integer cantidad
-) {
+    public ResponseEntity<CarritoItemResponse> actualizarCantidad(
+            @PathVariable Long carritoId,
+            @PathVariable Long productoId,
+            @RequestParam Integer cantidad,
+            Principal principal
+    ) {
+        validarAccesoCarrito(carritoId, principal);
 
-    CarritoItem item =
-            carritoItemService.actualizarCantidad(
-                    carritoId,
-                    productoId,
-                    cantidad
-            );
+        CarritoItem item =
+                carritoItemService.actualizarCantidad(
+                        carritoId,
+                        productoId,
+                        cantidad
+                );
 
-    return ResponseEntity.ok(
-            convertirResponse(item)
-    );
-}
+        return ResponseEntity.ok(
+                convertirResponse(item)
+        );
+    }
 
     @DeleteMapping("/{productoId}")
     public ResponseEntity<Void> eliminarProducto(
             @PathVariable Long carritoId,
-            @PathVariable Long productoId
+            @PathVariable Long productoId,
+            Principal principal
     ) {
+        validarAccesoCarrito(carritoId, principal);
 
         carritoItemService.eliminarProducto(
                 carritoId,
@@ -136,8 +172,10 @@ public ResponseEntity<CarritoItemResponse> actualizarCantidad(
 
     @DeleteMapping
     public ResponseEntity<Void> vaciarCarrito(
-            @PathVariable Long carritoId
+            @PathVariable Long carritoId,
+            Principal principal
     ) {
+        validarAccesoCarrito(carritoId, principal);
 
         carritoItemService.vaciarCarrito(carritoId);
 
@@ -146,8 +184,10 @@ public ResponseEntity<CarritoItemResponse> actualizarCantidad(
 
     @GetMapping("/count")
     public ResponseEntity<Long> contarProductos(
-            @PathVariable Long carritoId
+            @PathVariable Long carritoId,
+            Principal principal
     ) {
+        validarAccesoCarrito(carritoId, principal);
 
         return ResponseEntity.ok(
                 carritoItemService.contarProductos(carritoId)
@@ -157,14 +197,17 @@ public ResponseEntity<CarritoItemResponse> actualizarCantidad(
     @GetMapping("/{productoId}/exists")
     public ResponseEntity<Boolean> existeProducto(
             @PathVariable Long carritoId,
-            @PathVariable Long productoId
+            @PathVariable Long productoId,
+            Principal principal
     ) {
+        validarAccesoCarrito(carritoId, principal);
 
         return ResponseEntity.ok(
-                carritoItemService.existeProducto(
-                        carritoId,
-                        productoId
-                )
+                carritoItemRepoExists(carritoId, productoId)
         );
+    }
+
+    private Boolean carritoItemRepoExists(Long carritoId, Long productoId) {
+        return carritoItemService.existeProducto(carritoId, productoId);
     }
 }

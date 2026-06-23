@@ -204,7 +204,17 @@ public class PedidoController {
 
     @PostMapping("/{id}/pagar")
     public ResponseEntity<Map<String, String>> iniciarPago(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
         Pedido pedido = pedidoService.obtenerPedidoPorId(id);
+
+        // Validar que el pedido pertenece al usuario logueado o que es admin/superuser
+        boolean isAdminOrSuper = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_USER"));
+        if (!pedido.getUsuario().getEmail().equals(email) && !isAdminOrSuper) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
         Preference preference = mercadoPagoService.crearPreferenciaDePago(pedido);
 
         Map<String, String> respuesta = new HashMap<>();
@@ -223,8 +233,26 @@ public class PedidoController {
             @RequestParam("status") String status,
             @RequestParam("external_reference") Long pedidoId) {
 
-        // Actualizar estado del pedido a PAGADO
-        pedidoService.actualizarEstado(pedidoId, "PAGADO");
+        try {
+            PaymentClient paymentClient = new PaymentClient();
+            Payment payment = paymentClient.get(Long.parseLong(paymentId));
+
+            String externalReference = payment.getExternalReference();
+            if (externalReference == null || !externalReference.equals(pedidoId.toString())) {
+                logger.warn("⚠️ Intento de manipulación de pago. Pedido esperado: {}, obtenido: {}", pedidoId, externalReference);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+            if ("approved".equals(payment.getStatus())) {
+                pedidoService.actualizarEstado(pedidoId, "PAGADO");
+            } else {
+                logger.warn("⚠️ Callback de éxito recibido pero el pago no está aprobado en MP. Estado actual: {}", payment.getStatus());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        } catch (Exception e) {
+            logger.error("❌ Error verificando pago exitoso: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago aprobado con éxito");
@@ -242,8 +270,26 @@ public class PedidoController {
             @RequestParam("status") String status,
             @RequestParam("external_reference") Long pedidoId) {
 
-        // Actualizar estado del pedido a PENDIENTE_PAGO
-        pedidoService.actualizarEstado(pedidoId, "PENDIENTE_PAGO");
+        try {
+            PaymentClient paymentClient = new PaymentClient();
+            Payment payment = paymentClient.get(Long.parseLong(paymentId));
+
+            String externalReference = payment.getExternalReference();
+            if (externalReference == null || !externalReference.equals(pedidoId.toString())) {
+                logger.warn("⚠️ Intento de manipulación de pago pendiente. Pedido esperado: {}, obtenido: {}", pedidoId, externalReference);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
+            if ("pending".equals(payment.getStatus()) || "in_process".equals(payment.getStatus())) {
+                pedidoService.actualizarEstado(pedidoId, "PENDIENTE_PAGO");
+            } else {
+                logger.warn("⚠️ Callback de pendiente recibido pero el pago tiene estado: {}", payment.getStatus());
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+        } catch (Exception e) {
+            logger.error("❌ Error verificando pago pendiente: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago pendiente de procesamiento");
@@ -259,8 +305,21 @@ public class PedidoController {
     public ResponseEntity<Map<String, Object>> pagoFallido(
             @RequestParam("external_reference") Long pedidoId) {
 
-        // Actualizar estado del pedido a RECHAZADO
-        pedidoService.actualizarEstado(pedidoId, "RECHAZADO");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !authentication.getName().equals("anonymousUser")) {
+            String email = authentication.getName();
+            Pedido pedido = pedidoService.obtenerPedidoPorId(pedidoId);
+            boolean isAdminOrSuper = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_SUPER_USER"));
+            if (pedido.getUsuario().getEmail().equals(email) || isAdminOrSuper) {
+                pedidoService.actualizarEstado(pedidoId, "RECHAZADO");
+            } else {
+                logger.warn("⚠️ Intento no autorizado de marcar pedido {} como RECHAZADO", pedidoId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+        } else {
+            logger.info("ℹ️ Callback de fallo recibido sin autenticación para pedido {}. Se delega la actualización de estado al webhook.", pedidoId);
+        }
 
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago rechazado o fallido");
