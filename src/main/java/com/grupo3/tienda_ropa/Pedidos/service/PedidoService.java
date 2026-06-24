@@ -97,7 +97,7 @@ public class PedidoService {
         Pedido pedido = new Pedido();
 
         pedido.setUsuario(carrito.getUsuario());
-        pedido.setEstado("PENDIENTE");
+        pedido.setEstado("PAGADO"); // Compra fingida: salta estado PENDIENTE
         pedido.setFecha(LocalDateTime.now());
         // Si tu entidad NO tiene estos campos, coméntalos o elimínalos
         // pedido.setSubtotal(subtotal);  // Comentar si no existe
@@ -113,9 +113,20 @@ public class PedidoService {
 
         List<PedidosDetalles> detalles = items.stream()
                 .map(item -> {
+                    // Descontar stock de la variante
+                    Producto prod = item.getProducto();
+                    if (prod.getVariantes() != null && !prod.getVariantes().isEmpty()) {
+                        // Buscar la primera variante con stock suficiente, o usar la primera si no hay
+                        Variante targetVariant = prod.getVariantes().stream()
+                            .filter(v -> v.getStock() >= item.getCantidad())
+                            .findFirst()
+                            .orElse(prod.getVariantes().get(0));
+                        targetVariant.setStock(Math.max(0, targetVariant.getStock() - item.getCantidad()));
+                    }
+
                     PedidosDetalles detalle = new PedidosDetalles();
                     detalle.setPedido(pedidoGuardado);
-                    detalle.setProducto(item.getProducto());
+                    detalle.setProducto(prod);
                     detalle.setCantidad(item.getCantidad());
                     return detalle;
                 })
@@ -172,7 +183,7 @@ public class PedidoService {
 
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);
-        pedido.setEstado("PENDIENTE");
+        pedido.setEstado("PAGADO"); // Compra fingida: salta estado PENDIENTE
         pedido.setFecha(LocalDateTime.now());
         // Si tu entidad NO tiene estos campos, coméntalos o elimínalos
         // pedido.setSubtotal(subtotal);  // Comentar si no existe
@@ -185,6 +196,15 @@ public class PedidoService {
 
         if (cuponAplicado != null) {
             cuponService.registrarUso(cuponAplicado);
+        }
+
+        // Descontar stock de la variante
+        if (producto.getVariantes() != null && !producto.getVariantes().isEmpty()) {
+            Variante targetVariant = producto.getVariantes().stream()
+                .filter(v -> v.getStock() >= request.getCantidad())
+                .findFirst()
+                .orElse(producto.getVariantes().get(0));
+            targetVariant.setStock(Math.max(0, targetVariant.getStock() - request.getCantidad()));
         }
 
         PedidosDetalles detalle = new PedidosDetalles();
@@ -297,7 +317,7 @@ public class PedidoService {
 
             String mensajeEstado;
             switch (nuevoEstado) {
-                case "APROBADO":
+                case "PAGADO":
                     mensajeEstado = "¡Buenas noticias! Tu pago ha sido aprobado. Estamos preparando tus artículos.";
                     break;
                 case "RECHAZADO":

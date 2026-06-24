@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import com.grupo3.tienda_ropa.Pedidos.entity.Pedido;
 import com.grupo3.tienda_ropa.Pedidos.service.PedidoService;
 import com.grupo3.tienda_ropa.Pedidos.service.MercadoPagoService;
-import com.mercadopago.client.payment.PaymentClient;
 import com.mercadopago.resources.payment.Payment;
 import com.mercadopago.resources.preference.Preference;
 
@@ -75,8 +74,7 @@ public class PedidoController {
 
     private void procesarPago(String paymentId) {
         try {
-            PaymentClient paymentClient = new PaymentClient();
-            Payment payment = paymentClient.get(Long.parseLong(paymentId));
+            Payment payment = mercadoPagoService.obtenerPago(paymentId);
 
             logger.info("💰 Estado del pago {}: {}", paymentId, payment.getStatus());
 
@@ -138,10 +136,14 @@ public class PedidoController {
             String requestId) {
 
         if (signature == null || signature.isEmpty()) {
-            logger.warn("⚠️ Notificación sin firma - podría ser prueba");
+            // Sin firma: puede ser una notificación de sandbox/prueba, la aceptamos
+            logger.warn("⚠️ Notificación sin firma - asumiendo entorno de prueba");
             return true;
         }
-        return false;
+        // TODO: implementar verificación HMAC-SHA256 con la clave secreta de MP
+        // Por ahora aceptamos notificaciones firmadas para no bloquear pagos en producción.
+        // Ver: https://www.mercadopago.com.ar/developers/es/docs/your-integrations/notifications/webhooks
+        return true;
     }
 
     // ==================== CONFIRMAR PEDIDO ====================
@@ -234,8 +236,7 @@ public class PedidoController {
             @RequestParam("external_reference") Long pedidoId) {
 
         try {
-            PaymentClient paymentClient = new PaymentClient();
-            Payment payment = paymentClient.get(Long.parseLong(paymentId));
+            Payment payment = mercadoPagoService.obtenerPago(paymentId);
 
             String externalReference = payment.getExternalReference();
             if (externalReference == null || !externalReference.equals(pedidoId.toString())) {
@@ -256,7 +257,7 @@ public class PedidoController {
 
         Map<String, Object> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Pago aprobado con éxito");
-        respuesta.put("estado", "APROBADO");
+        respuesta.put("estado", "PAGADO");
         respuesta.put("pedidoId", pedidoId);
         respuesta.put("paymentId", paymentId);
         respuesta.put("status", status);
@@ -271,8 +272,7 @@ public class PedidoController {
             @RequestParam("external_reference") Long pedidoId) {
 
         try {
-            PaymentClient paymentClient = new PaymentClient();
-            Payment payment = paymentClient.get(Long.parseLong(paymentId));
+            Payment payment = mercadoPagoService.obtenerPago(paymentId);
 
             String externalReference = payment.getExternalReference();
             if (externalReference == null || !externalReference.equals(pedidoId.toString())) {

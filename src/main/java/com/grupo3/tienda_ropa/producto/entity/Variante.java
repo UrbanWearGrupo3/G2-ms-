@@ -36,4 +36,7 @@ public class Variante {
 
     @Column(name = "codigo_barras")
     private String codigoBarras;
+
+    @Column(nullable = false)
+    private Boolean activo = true;
 }

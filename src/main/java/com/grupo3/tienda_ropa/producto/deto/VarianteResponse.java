@@ -12,4 +12,5 @@ public class VarianteResponse {
     private ColorResponseDto color;
     private Integer stock;
     private String codigoBarras;
+    private Boolean activo = true;
 }

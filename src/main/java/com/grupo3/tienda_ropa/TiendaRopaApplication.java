@@ -20,26 +20,42 @@ public class TiendaRopaApplication {
 						.map(String::trim)
 						.filter(line -> !line.isEmpty() && !line.startsWith("#"))
 						.forEach(line -> {
-							String[] parts = line.split("=", 2);
-							if (parts.length == 2) {
-								System.setProperty(parts[0].trim(), parts[1].trim());
+							int eqIdx = line.indexOf('=');
+							if (eqIdx > 0) {
+								String key = line.substring(0, eqIdx).trim();
+								String value = line.substring(eqIdx + 1).trim();
+								// Eliminar comillas simples o dobles que rodean el valor
+								if ((value.startsWith("\"") && value.endsWith("\"")) ||
+									(value.startsWith("'") && value.endsWith("'"))) {
+									value = value.substring(1, value.length() - 1);
+								}
+								System.setProperty(key, value);
 							}
 						});
+				System.out.println("✅ Archivo .env cargado correctamente");
+			} else {
+				System.out.println("INFO: No se encontró archivo .env, usando variables de entorno del sistema.");
 			}
 		} catch (Exception e) {
-			// Ignorar errores al cargar .env en entornos donde se inyectan variables nativas
+			System.err.println("ERROR al cargar .env: " + e.getMessage());
 		}
 
-		// Agrega credenciales
-		String accessToken = System.getProperty("MERCADOPAGO_ACCESS_TOKEN", System.getenv("MERCADOPAGO_ACCESS_TOKEN"));
+		// Configurar Mercado Pago lo antes posible
+		String accessToken = System.getProperty("MERCADOPAGO_ACCESS_TOKEN",
+				System.getenv("MERCADOPAGO_ACCESS_TOKEN"));
 		if (accessToken != null && !accessToken.trim().isEmpty()) {
-			MercadoPagoConfig.setAccessToken(accessToken);
+			MercadoPagoConfig.setAccessToken(accessToken.trim());
+			String preview = accessToken.length() > 8
+					? accessToken.substring(0, 6) + "..." + accessToken.substring(accessToken.length() - 4)
+					: "(muy corto)";
+			System.out.println("✅ MercadoPago configurado al inicio. Token: " + preview + " (longitud: " + accessToken.length() + ")");
 		} else {
-			System.out.println("WARN: MERCADOPAGO_ACCESS_TOKEN not found in environment properties or .env file at startup. Will fallback to database/dynamic config.");
+			System.out.println("WARN: MERCADOPAGO_ACCESS_TOKEN no encontrado. El pago no funcionará.");
 		}
 
 		SpringApplication.run(TiendaRopaApplication.class, args);
 	}
+
 
 	@org.springframework.context.annotation.Bean
 	public org.springframework.cache.CacheManager cacheManager() {

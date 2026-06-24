@@ -80,6 +80,7 @@ public class ProductoService {
                 variante.setTalle(vr.getTalle());
                 variante.setStock(vr.getStock());
                 variante.setProducto(producto);
+                variante.setActivo(vr.getActivo() != null ? vr.getActivo() : true);
 
                 // Resolver color por ID
                 Color color = colorRepository.findById(vr.getColorId())
@@ -153,12 +154,15 @@ public class ProductoService {
                 if (existingVariants.containsKey(key)) {
                     Variante existing = existingVariants.get(key);
                     existing.setStock(vr.getStock());
+                    existing.setActivo(vr.getActivo() != null ? vr.getActivo() : true);
                     updatedVariants.add(existing);
+                    existingVariants.remove(key);
                 } else {
                     Variante nueva = new Variante();
                     nueva.setTalle(vr.getTalle());
                     nueva.setStock(vr.getStock());
                     nueva.setProducto(producto);
+                    nueva.setActivo(vr.getActivo() != null ? vr.getActivo() : true);
 
                     Color color = colorRepository.findById(vr.getColorId())
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -174,6 +178,12 @@ public class ProductoService {
                     nueva.setCodigoBarras(barcode);
                     updatedVariants.add(nueva);
                 }
+            }
+
+            // Keep any variant that exists in the database but was not in the request, but mark it as deactivated
+            for (Variante remaining : existingVariants.values()) {
+                remaining.setActivo(false);
+                updatedVariants.add(remaining);
             }
 
             producto.getVariantes().clear();
@@ -322,6 +332,7 @@ public class ProductoService {
                 vr.setTalle(v.getTalle());
                 vr.setStock(v.getStock());
                 vr.setCodigoBarras(v.getCodigoBarras());
+                vr.setActivo(v.getActivo());
 
                 // Mapear color
                 if (v.getColor() != null) {

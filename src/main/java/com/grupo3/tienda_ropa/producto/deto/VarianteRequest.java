@@ -21,4 +21,8 @@ public class VarianteRequest {
     private Integer stock;
 
     private String codigoBarras;
+
+    private Long id;
+
+    private Boolean activo = true;
 }
